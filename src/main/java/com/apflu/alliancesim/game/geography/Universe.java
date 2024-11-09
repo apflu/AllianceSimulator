@@ -30,4 +30,9 @@ public class Universe {
     public Map<Integer, SolarSystem> getSolarSystemMap() {
         return solarSystemMap;
     }
+
+    /**
+     * 防止创建对象
+     */
+    private Universe() {}
 }

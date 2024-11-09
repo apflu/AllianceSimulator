@@ -36,4 +36,9 @@ public final class LocationManager {
     public Stream<Location> all() {
         return locations.stream();
     }
+
+    /**
+     * 防止创建对象
+     */
+    private LocationManager() {}
 }
