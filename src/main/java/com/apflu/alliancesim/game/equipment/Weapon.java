@@ -30,6 +30,9 @@ public class Weapon extends ShipActiveModule implements ShipModuleRepeatable {
         RangeOptimal = rangeOptimal;
         RangeFalloff = rangeFalloff;
     }
+    public int getWeaponDamage() {
+        return WeaponDamage;
+    }
 
     @Override
     public void onCycleStart(SpaceObject target) {

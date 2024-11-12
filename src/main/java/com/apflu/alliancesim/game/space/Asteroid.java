@@ -12,6 +12,26 @@ import org.slf4j.LoggerFactory;
  * 其显著特点是拥有替代血条的体积属性。当体积耗尽时，小行星将会“死亡”并消失。
  */
 public class Asteroid extends SpaceObject implements ImportantSpaceObject {
+    private int volume;
+    private Material type;
+
+    public Asteroid(int volume, Material type, com.apflu.alliancesim.game.geography.Location location) {
+        this.volume = volume;
+        this.type = type;
+        Location = location;
+    }
+
+    public void reduceVolume(int amount) {
+        volume -= amount;
+        if (this.volume <= 0) {
+            onDestroy(); // 通知LocationManager��在的地点销��可能性
+        }
+    }
+
+    public int getVolume() {
+        return volume;
+    }
+
     private static final Logger logger = LoggerFactory.getLogger(Asteroid.class);
 
     // 里面还剩多少矿
@@ -30,7 +50,7 @@ public class Asteroid extends SpaceObject implements ImportantSpaceObject {
      */
     public Material getType() {
         // TODO
-        return null;
+        return type;
     }
 
     /**

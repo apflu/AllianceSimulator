@@ -6,7 +6,6 @@ import com.apflu.alliancesim.game.space.Asteroid;
 import com.apflu.alliancesim.logging.LogMarkers;
 import com.apflu.alliancesim.util.Validator;
 import com.apflu.alliancesim.util.Validators;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,9 +23,7 @@ public class MiningEquipment extends Weapon {
 
     @Override
     public void onCycleStart(SpaceObject target) {
-
         Asteroid targetAsteroid = (Asteroid) target;
-
         // 最后记录挖矿事件
         logger.info(LogMarkers.MINING, "started mining.");
     }
@@ -41,7 +38,8 @@ public class MiningEquipment extends Weapon {
         Asteroid targetAsteroid = (Asteroid) target;
         // TODO
         // 计算伤害
-        int finalDamage = 0;
+        int finalDamage = getWeaponDamage();
+        targetAsteroid.reduceVolume(finalDamage);
 
         // 对矿石造成体积伤害
 
