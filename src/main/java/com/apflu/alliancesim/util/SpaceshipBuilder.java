@@ -29,7 +29,7 @@ public class SpaceshipBuilder {
     }
 
     public SpaceshipBuilder setShip(ShipType shipType) {
-        return new SpaceshipBuilder(moduleList, shipType, );
+        return new SpaceshipBuilder(moduleList, shipType, location);
     }
 
     public SpaceshipBuilder setLocation(Location location) {

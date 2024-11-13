@@ -1,5 +1,6 @@
 package com.apflu.alliancesim.game.space;
 
+import com.apflu.alliancesim.game.Item;
 import com.apflu.alliancesim.game.Material;
 import com.apflu.alliancesim.game.SpaceObject;
 import com.apflu.alliancesim.game.geography.ImportantSpaceObject;
@@ -16,6 +17,8 @@ public class Asteroid extends SpaceObject implements ImportantSpaceObject {
 
     // 里面还剩多少矿
     private int hpRemain; // TODO: 追踪血量，且在初始化时设定为其最大血量
+    private Item type;
+
 
     public final Location Location;
 
@@ -39,13 +42,13 @@ public class Asteroid extends SpaceObject implements ImportantSpaceObject {
      * @param amount 伤害
      */
     @Override
-    public void takeDamage(int amount) {
+    public void onDamageTaken(SpaceObject source, int amount) {
         // TODO
-        if (true) { // TODO
+        if (true) { // TODO: 如果hp（体积）被打光了
             onDestroy(); // 通知LocationManager潜在的地点销毁可能性
         }
 
-        logger.trace("Asteroid taking {} damage, {} remaining.", amount, hpRemain);
+        logger.trace("Asteroid taking {} damage from {}, {} remaining.", amount, source.getName(), hpRemain);
     }
 
 }

@@ -34,5 +34,7 @@ public final class MilestoneBasicMining {
 
         // 攻击里面的第一个关键物件；也就是刚刚创建的那块矿
         testShip.attack(miningSiteLocation.getImportantList().get(0));
+
+        System.out.println("test");
     }
 }
