@@ -40,7 +40,10 @@ public class SpaceShip extends SpaceObject implements ShipType, ImportantSpaceOb
         // TODO
     }
 
+
     public List<ShipModule> getModuleList() {
         return new ArrayList<>(moduleList);
     }
+
+
 }
