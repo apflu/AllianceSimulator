@@ -1,6 +1,5 @@
 package com.apflu.alliancesim.game.space;
 
-import com.apflu.alliancesim.game.Item;
 import com.apflu.alliancesim.game.Material;
 import com.apflu.alliancesim.game.SpaceObject;
 import com.apflu.alliancesim.game.geography.ImportantSpaceObject;
@@ -16,7 +15,20 @@ public class Asteroid extends SpaceObject implements ImportantSpaceObject {
     private int volume;
     private Material type;
 
-    public Asteroid(int volume, Material type, com.apflu.alliancesim.game.geography.Location location) {
+    private static final Logger logger = LoggerFactory.getLogger(Asteroid.class);
+
+    // 里面还剩多少矿
+    private int hpRemain; // TODO: 追踪血量，且在初始化时设定为其最大血量
+
+
+    public final Location Location;
+
+    public Asteroid() {
+        super.invulnerable = true; // 小行星不使用血量属性
+        Location = onCreate(); // 通知LocationManager并获得其所在的地点
+    }
+
+    public Asteroid(int volume, Material type, Location location) {
         this.volume = volume;
         this.type = type;
         Location = location;
@@ -33,26 +45,11 @@ public class Asteroid extends SpaceObject implements ImportantSpaceObject {
         return volume;
     }
 
-    private static final Logger logger = LoggerFactory.getLogger(Asteroid.class);
-
-    // 里面还剩多少矿
-    private int hpRemain; // TODO: 追踪血量，且在初始化时设定为其最大血量
-    private Item type;
-
-
-    public final Location Location;
-
-    public Asteroid() {
-        super.invulnerable = true; // 小行星不使用血量属性
-        Location = onCreate(); // 通知LocationManager并获得其所在的地点
-    }
-
     /**
      * 会返回小行星的种类，也就是说构成它的矿物是什么；开采它的时候将会把对应种类的矿物加入船舱。
      * @return 原材料
      */
     public Material getType() {
-        // TODO
         return type;
     }
 
