@@ -1,6 +1,5 @@
 package com.apflu.alliancesim.game;
 
-import com.apflu.alliancesim.debug.constants.TestSkills;
 import com.apflu.alliancesim.game.training.SkillSet;
 import com.apflu.alliancesim.util.exceptions.SkillPointsOverflowException;
 
@@ -11,7 +10,7 @@ public class GameCharacter {
         this.trainedSkill.incrementSkill(skillPoint);
     }
 
-    public void setCurrentTrainingSKill(Skill skill) {
+    public void setCurrentTrainingSkill(Skill skill) {
         this.trainedSkill.setFocus(skill);
     }
 
