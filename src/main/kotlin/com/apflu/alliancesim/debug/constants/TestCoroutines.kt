@@ -7,7 +7,7 @@ object TestCoroutines {
     private val logger = KotlinLogging.logger {}
 
     @OptIn(DelicateCoroutinesApi::class)
-    suspend fun doInfiniteWait() {
+    suspend fun wait() {
         val job = GlobalScope.launch {
             while (true) {
                 delay(10000L)
@@ -16,8 +16,10 @@ object TestCoroutines {
         }
         try {
             job.join()
-        } catch (e: CancellationException) {
+        } catch (_: CancellationException) {
             logger.debug { "Job was cancelled." }
         }
     }
+
+    fun doInfiniteWait() = runBlocking { wait() }
 }

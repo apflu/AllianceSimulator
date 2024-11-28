@@ -3,6 +3,7 @@ package com.apflu.alliancesim.debug.versions;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.core.util.StatusPrinter2;
 import com.apflu.alliancesim.debug.DebugEnvironments;
+import com.apflu.alliancesim.debug.constants.TestCoroutines;
 import com.apflu.alliancesim.debug.constants.TestModules;
 import com.apflu.alliancesim.debug.constants.TestSolarSystems;
 import com.apflu.alliancesim.game.geography.Location;
@@ -43,6 +44,6 @@ public final class MilestoneBasicMining {
         // 攻击里面的第一个关键物件；也就是刚刚创建的那块矿
         testShip.attack(miningSiteLocation.getImportantList().get(0));
 
-        System.out.println("test");
+        TestCoroutines.INSTANCE.doInfiniteWait();
     }
 }
