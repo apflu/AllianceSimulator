@@ -1,7 +1,7 @@
 package com.apflu.alliancesim.game;
 
 public class GameCharacter {
-    Skill currentTrainingSkill;
+    private Skill currentTrainingSkill;
 
     /**
      * 逻辑最好不在这里处理。
@@ -9,5 +9,13 @@ public class GameCharacter {
      */
     public void updateSkill(long interval) {
 
+    }
+
+    public Skill getCurrentTrainingSkill() {
+        return currentTrainingSkill;
+    }
+
+    public Skill getNextCurrentTrainingSkill() {
+        return null; // TODO
     }
 }
