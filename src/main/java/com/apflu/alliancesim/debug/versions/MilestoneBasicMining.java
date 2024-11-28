@@ -1,5 +1,7 @@
 package com.apflu.alliancesim.debug.versions;
 
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.core.util.StatusPrinter2;
 import com.apflu.alliancesim.debug.DebugEnvironments;
 import com.apflu.alliancesim.debug.constants.TestModules;
 import com.apflu.alliancesim.debug.constants.TestSolarSystems;
@@ -19,6 +21,12 @@ public final class MilestoneBasicMining {
 
     public static void main(String[] args) {
         logger.debug("Running MilestoneBasicMining 1...");
+        System.out.println();
+
+        // 输出测试信息，用来debug logger本身。
+        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        new StatusPrinter2().print(lc);
+        logger.debug("finished logger config output.");
 
         Universe.INSTANCE.register(TestSolarSystems.NewCaldari); // 将测试用的星系添加到宇宙里
 

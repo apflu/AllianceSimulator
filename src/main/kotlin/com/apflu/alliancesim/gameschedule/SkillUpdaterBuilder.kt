@@ -9,6 +9,9 @@ import org.slf4j.LoggerFactory
 class SkillUpdaterBuilder(val characterRange: MutableSet<GameCharacter>, val interval: Long,
                           val scope: CoroutineScope = CoroutineScope(Dispatchers.Default)) {
 
+    constructor(characterRange: MutableSet<GameCharacter>, interval: Long) : this(characterRange, interval,
+        CoroutineScope(Dispatchers.Default))
+
     private val logger: Logger = LoggerFactory.getLogger(SkillUpdaterBuilder::class.java)
 
     var rangeUpdated = false
@@ -56,4 +59,6 @@ class SkillUpdaterBuilder(val characterRange: MutableSet<GameCharacter>, val int
             }
         }
     }
+
+
 }
