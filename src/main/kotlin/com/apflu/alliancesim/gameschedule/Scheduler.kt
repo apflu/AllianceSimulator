@@ -4,6 +4,7 @@ import com.apflu.alliancesim.game.GameCharacter
 import com.apflu.alliancesim.game.SpaceObject
 import com.apflu.alliancesim.game.equipment.ShipActiveModule
 import com.apflu.alliancesim.game.equipment.ShipModuleRepeatable
+import com.apflu.alliancesim.logging.LogMarkers
 import kotlinx.coroutines.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -29,11 +30,11 @@ object Scheduler {
                     module.onCycleEnd(target)
                 } while (repeat)
             } catch (e: CancellationException) {
-                logger.debug("module ${module.name}'s activation is interrupted.")
+                logger.debug(LogMarkers.COMBAT, "module ${module.name}'s activation is interrupted.")
             }
         }
         jobMap[module] = job
-        logger.trace("registered module ${module.name} for its timer.")
+        logger.trace(LogMarkers.COMBAT, "registered module ${module.name} for its timer.")
     }
 
     /**

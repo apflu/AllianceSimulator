@@ -7,4 +7,5 @@ public final class LogMarkers {
     public static final Marker PLAYER_COMMAND = MarkerFactory.getMarker("PLAYER_COMMAND");
     public static final Marker MINING = MarkerFactory.getMarker("MINING");
     public static final Marker COMBAT = MarkerFactory.getMarker("COMBAT");
+    public static final Marker SKILL_TRAINING = MarkerFactory.getMarker("SKILL_TRAINING");
 }
