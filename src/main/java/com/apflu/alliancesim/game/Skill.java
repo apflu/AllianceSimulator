@@ -29,6 +29,6 @@ public class Skill extends BaseSkill{
             throw new IndexOutOfBoundsException("Skill point out of bound");
         }
         double val = Math.log(Math.pow((double) skillPoints / 250 / this.multiplier,2))/Math.log(32) + 1;
-        return (int) Math.floor(val);
+        return (int) Math.max(Math.floor(val),0);
     }
 }
