@@ -47,7 +47,8 @@ class SkillUpdaterBuilder(val characterRange: MutableSet<GameCharacter>, val int
      * avoid direct usage in common circumstances
      */
     internal fun build(): Job {
-        return scope.launch(start = CoroutineStart.LAZY) {
+        // return scope.launch(start = CoroutineStart.LAZY){
+        return scope.launch {
             while (true) {
                 if (rangeUpdated) {
                     pendingRange = characterRange.toSet()

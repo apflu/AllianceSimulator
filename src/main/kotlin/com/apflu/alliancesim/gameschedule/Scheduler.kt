@@ -72,5 +72,6 @@ object Scheduler {
         }
 
         skillUpdaterMap.put(updater, updater.build())
+
     }
 }
