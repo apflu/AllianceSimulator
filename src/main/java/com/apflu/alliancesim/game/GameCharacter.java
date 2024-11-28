@@ -1,18 +1,22 @@
 package com.apflu.alliancesim.game;
 
+import com.apflu.alliancesim.debug.constants.TestSkills;
+import com.apflu.alliancesim.game.training.SkillSet;
+import com.apflu.alliancesim.util.exceptions.SkillPointsOverflowException;
+
 public class GameCharacter {
-    private Skill currentTrainingSkill;
+    private final SkillSet trainedSkill = new SkillSet();
 
-    /**
-     * 逻辑最好不在这里处理。
-     * @param interval 离上次更新的间隔；*毫秒*！
-     */
-    public void updateSkill(long interval) {
+    public void updateSkill(double skillPoint) throws SkillPointsOverflowException {
+        this.trainedSkill.incrementSkill(skillPoint);
+    }
 
+    public void setCurrentTrainingSKill(Skill skill) {
+        this.trainedSkill.setFocus(skill);
     }
 
     public Skill getCurrentTrainingSkill() {
-        return currentTrainingSkill;
+        return this.trainedSkill.getFocus();
     }
 
     public Skill getNextCurrentTrainingSkill() {

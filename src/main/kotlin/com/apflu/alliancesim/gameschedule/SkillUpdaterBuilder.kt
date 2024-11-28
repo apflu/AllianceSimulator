@@ -1,6 +1,7 @@
 package com.apflu.alliancesim.gameschedule
 
 import com.apflu.alliancesim.game.GameCharacter
+import com.apflu.alliancesim.game.training.SkillManager
 import com.apflu.alliancesim.logging.LogMarkers
 import kotlinx.coroutines.*
 import org.slf4j.Logger
@@ -53,7 +54,7 @@ class SkillUpdaterBuilder(val characterRange: MutableSet<GameCharacter>, val int
                 }
 
                 for (char in pendingRange) {
-                    char.updateSkill(interval)
+                    SkillManager.INSTANCE.updateSkill(char,interval)
                 }
                 delay(interval)
             }
