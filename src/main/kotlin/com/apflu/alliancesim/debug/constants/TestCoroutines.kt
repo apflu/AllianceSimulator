@@ -22,4 +22,14 @@ object TestCoroutines {
     }
 
     fun doInfiniteWait() = runBlocking { wait() }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    fun doNonBlockWait() {
+        val job = GlobalScope.launch {
+            while (true) {
+                delay(10000L)
+                logger.debug { "Waiting with infinite Coroutine." }
+            }
+        }
+    }
 }
