@@ -9,10 +9,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GameCharacterBuilder implements Builder {
-    private SkillSetBuilder skillSetBuilder;
-    private SkillSet trainedSkills;
-    private NameGenerator nameGenerator;
-    private String name;
+    private final SkillSetBuilder skillSetBuilder;
+    private final SkillSet trainedSkills;
+    private final NameGenerator nameGenerator;
+    private final String name;
 
     /**
      * 全能constructor；不利于手动创建，一般不进行手动调用
