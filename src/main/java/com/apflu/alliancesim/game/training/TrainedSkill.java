@@ -44,7 +44,7 @@ public class TrainedSkill {
     }
 
     @Override public String toString(){
-        return this.skill.getName() + ": Lv " + this.getLv() + ", " + this.skillPoints + "SP\n";
+        return this.skill.getName() + ": Lv " + this.getLv() + ", " + this.skillPoints + "SP";
     }
 
 }
