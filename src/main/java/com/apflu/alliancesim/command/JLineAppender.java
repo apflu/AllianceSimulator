@@ -25,7 +25,6 @@ public class JLineAppender extends AppenderBase<ILoggingEvent> {
     public void start() {
         try {
             Terminal terminal = TerminalBuilder.builder()
-                    .dumb(false)
                     .build();
             LineReader reader = LineReaderBuilder.builder().terminal(terminal).build();
 
