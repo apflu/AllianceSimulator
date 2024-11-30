@@ -8,18 +8,16 @@
         </encoder>
     </appender>
 
-    <appender name="JLINE" class="com.apflu.alliancesim.command.ConsoleAppender">
-        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+    <appender name="JLINE" class="com.apflu.alliancesim.command.JLineAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
             <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
+        </layout>
     </appender>
 
     <!-- 设置全局日志级别 -->
-    <!--root level="trace">
-        <appender-ref ref="JLINE" />
-    </root-->
     <root level="debug">
-        <appender-ref ref="CONSOLE" />
+        <!--appender-ref ref="CONSOLE" /-->
+        <appender-ref ref="JLINE" />
     </root>
 
 </configuration>
