@@ -6,6 +6,11 @@ plugins {
     id("com.gradleup.shadow") version "9.0.0-beta2"
 }
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
 group = "org.example"
 version = "1.0-SNAPSHOT"
 
