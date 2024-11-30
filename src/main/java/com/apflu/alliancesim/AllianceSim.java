@@ -22,7 +22,7 @@ public class AllianceSim {
                 logger.info("received command: {}", command);
             }
         } catch (Exception exception) {
-            logger.error(exception.getMessage(), exception);
+            logger.warn(exception.getMessage(), exception);
         }
     }
 
