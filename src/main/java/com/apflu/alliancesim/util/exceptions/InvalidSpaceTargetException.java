@@ -1,4 +1,4 @@
-package com.apflu.alliancesim.events;
+package com.apflu.alliancesim.util.exceptions;
 
 import com.apflu.alliancesim.game.SpaceObject;
 
