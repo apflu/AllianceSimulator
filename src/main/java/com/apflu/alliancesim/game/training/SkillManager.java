@@ -17,17 +17,27 @@ public final class SkillManager {
     private static final Random rand = new Random();
 
     public void updateSkill(GameCharacter character, long interval) throws NoAvailablePlanException {
+        updateSkillRecursePlan(character, getIncreasedSP(interval));
+    }
+
+    private void updateSkillRecursePlan(GameCharacter character, double skillPoints) throws NoAvailablePlanException {
         try {
-            updateSkillRecurse(character, getIncreasedSP(interval));
+            updateSkillRecursePoint(character, skillPoints);
         }catch (InvalidSkillPlanException e) {
             List<SkillPlan> trainable = PLAN_LIST.stream().filter(lambda ->
-                    (lambda.getNotIncluded(character.getCompleted())).size() > 0).collect(Collectors.toCollection(ArrayList::new));
-            if (trainable.size() == 0) throw new NoAvailablePlanException();
-            try {
-                character.setCurrentPlan(trainable.get(rand.nextInt(trainable.size())));
-            } catch (InvalidSkillPlanException ex) {
-                throw new RuntimeException("Should have no InvalidSkillPlanException, but caught one.");
-            }
+                    !(lambda.getNotIncluded(character.getCompleted())).isEmpty()).collect(Collectors.toCollection(ArrayList::new));
+            if (trainable.isEmpty()) throw new NoAvailablePlanException();
+            character.setCurrentPlan(trainable.get(rand.nextInt(trainable.size())));
+            updateSkillRecursePlan(character, skillPoints);
+        }
+    }
+
+    private void updateSkillRecursePoint(GameCharacter character, double skillPoints) throws InvalidSkillPlanException {
+        try {
+            character.updateSkill(skillPoints);
+        }catch(SkillPointsOverflowException e) {
+            character.setCurrentTrainingSkill(character.getNextToTrain());
+            updateSkillRecursePoint(character, e.overflowAmount);
         }
     }
 
@@ -38,15 +48,6 @@ public final class SkillManager {
     public void addPlan(SkillPlan... plans) {
         for (SkillPlan plan : plans) {
             addPlan(plan);
-        }
-    }
-
-    private void updateSkillRecurse(GameCharacter character, double skillPoints) throws InvalidSkillPlanException {
-        try {
-            character.updateSkill(skillPoints);
-        }catch(SkillPointsOverflowException e) {
-            character.setCurrentTrainingSkill(character.getNextToTrain());
-            updateSkillRecurse(character, e.overflowAmount);
         }
     }
 
