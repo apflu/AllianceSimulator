@@ -6,6 +6,7 @@ import com.apflu.alliancesim.debug.constants.TestCharacters;
 import com.apflu.alliancesim.debug.constants.TestCoroutines;
 import com.apflu.alliancesim.debug.constants.TestSkills;
 import com.apflu.alliancesim.game.GameCharacter;
+import com.apflu.alliancesim.game.training.SkillManager;
 import com.apflu.alliancesim.gameschedule.Scheduler;
 import com.apflu.alliancesim.gameschedule.SkillUpdaterBuilder;
 import org.slf4j.Logger;
@@ -22,6 +23,12 @@ public final class MilestoneBasicSkillTraining {
         LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         new StatusPrinter2().print(lc);
         logger.debug("finished logger config output.");
+
+        SkillManager.INSTANCE.addPlan(TestSkills.PlanAHAC,
+                TestSkills.PlanCHAC,
+                TestSkills.PlanGHAC,
+                TestSkills.PlanMHAC,
+                TestSkills.PlanMiner);
 
         // expect to do nothing, as the character list is empty
         SkillUpdaterBuilder updater = new SkillUpdaterBuilder(new HashSet<>(), 6000);

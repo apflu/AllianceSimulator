@@ -20,9 +20,11 @@ public class GameCharacter {
     public void updateSkill(double skillPoint) throws SkillPointsOverflowException, InvalidSkillPlanException {
         if(this.trainedSkill.getFocus() == null) {
             this.trainedSkill.setFocus(this.getNextToTrain());
-            logger.info("Changed training to {}", this.getCurrentTrainingSkill().getName());
+            logger.debug("Changed training to {}", this.getCurrentTrainingSkill().getName());
         }
         this.trainedSkill.incrementSkill(skillPoint);
+        logger.trace("Character {} gained {} skill points through training on skill {}.",
+                this, skillPoint, this.getCurrentTrainingSkill().getName());
     }
 
     public void setCurrentTrainingSkill(Skill skill) throws InvalidSkillPlanException {
@@ -32,7 +34,7 @@ public class GameCharacter {
     public void setCurrentPlan(SkillPlan plan) throws InvalidSkillPlanException {
         this.currPlan = plan;
         this.trainedSkill.setFocus(this.getNextToTrain());
-        logger.info("Changed skill plan to {}", plan.getName());
+        logger.debug("Changed skill plan to {}", plan.getName());
     }
 
     public Skill getCurrentTrainingSkill() throws InvalidSkillPlanException {

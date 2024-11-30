@@ -35,6 +35,12 @@ public final class SkillManager {
         PLAN_LIST.add(plan);
     }
 
+    public void addPlan(SkillPlan... plans) {
+        for (SkillPlan plan : plans) {
+            addPlan(plan);
+        }
+    }
+
     private void updateSkillRecurse(GameCharacter character, double skillPoints) throws InvalidSkillPlanException {
         try {
             character.updateSkill(skillPoints);

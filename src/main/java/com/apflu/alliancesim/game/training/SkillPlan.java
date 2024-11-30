@@ -2,6 +2,7 @@ package com.apflu.alliancesim.game.training;
 
 import com.apflu.alliancesim.game.Skill;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +19,10 @@ public class SkillPlan extends ArrayList<Skill>{
     public SkillPlan(String name, Collection<? extends Skill> c) {
         super(c);
         this.name = name;
+    }
+
+    public SkillPlan(String name, Skill... skills) {
+        this(name, Arrays.stream(skills).toList());
     }
 
     public String getName() {
