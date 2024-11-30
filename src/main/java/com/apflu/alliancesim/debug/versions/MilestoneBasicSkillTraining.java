@@ -28,7 +28,6 @@ public final class MilestoneBasicSkillTraining {
         Scheduler.INSTANCE.startSkillUpdater(updater, true);
 
         GameCharacter testChar = TestCharacters.Empty_CaldariCitizen;
-        testChar.setCurrentTrainingSkill(TestSkills.Mining);
         updater.addCharacter(testChar);
 
         TestCoroutines.INSTANCE.doInfiniteWait();

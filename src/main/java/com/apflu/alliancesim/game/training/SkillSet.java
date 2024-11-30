@@ -1,6 +1,7 @@
 package com.apflu.alliancesim.game.training;
 
 import com.apflu.alliancesim.game.Skill;
+import com.apflu.alliancesim.util.exceptions.InvalidSkillPlanException;
 import com.apflu.alliancesim.util.exceptions.SkillPointsOverflowException;
 import org.jetbrains.annotations.NotNull;
 
@@ -11,7 +12,7 @@ import java.util.stream.Collectors;
 
 public class SkillSet {
     private final Map<Integer,TrainedSkill> skillDict = new HashMap<>();
-    private int focusID;
+    private int focusID = -1;
 
     public SkillSet() {}
 
@@ -20,7 +21,10 @@ public class SkillSet {
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    public Skill getFocus() {
+    public Skill getFocus() throws InvalidSkillPlanException {
+        if (this.focusID == -1) {
+            throw new InvalidSkillPlanException();
+        }
         return skillDict.get(focusID).getSkill();
     }
 

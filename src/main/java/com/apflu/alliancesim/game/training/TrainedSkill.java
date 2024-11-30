@@ -28,15 +28,14 @@ public class TrainedSkill {
     }
 
     public void addSkillPoint(double skillPoints) throws SkillPointsOverflowException {
-        double tempSP = this.skillPoints;
         this.skillPoints += skillPoints;
         if (this.skillPoints >= this.skill.getMaxSP()) {
             double overflow = this.skillPoints - this.skill.getMaxSP();
             this.skillPoints = this.skill.getMaxSP();
-            logger.info(this.toString());
+            logger.info("Skill completed: {}", this);
             throw new SkillPointsOverflowException("Training overflow; change current training", overflow);
         }
-        logger.info(this.toString());
+        //logger.info(this.toString());
     }
 
     public boolean isCompleted() {
