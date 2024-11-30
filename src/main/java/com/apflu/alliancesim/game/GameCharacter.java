@@ -22,7 +22,7 @@ public class GameCharacter {
             this.trainedSkill.setFocus(this.getNextToTrain());
         }
         this.trainedSkill.incrementSkill(skillPoint);
-        logger.info("Character {} gained {} skill points through training on skill {}.",
+        logger.trace("Character {} gained {} skill points through training on skill {}.",
                 this, skillPoint, this.getCurrentTrainingSkill().getName());
     }
 
