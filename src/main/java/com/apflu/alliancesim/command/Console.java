@@ -23,11 +23,11 @@ public final class Console {
         terminal.writer().flush();
     }
 
-    static void setTerminal(Terminal terminal) {
+    public static void setTerminal(Terminal terminal) {
         Console.terminal = terminal;
     }
 
-    static void setReader(LineReader reader) {
+    public static void setReader(LineReader reader) {
         Console.reader = reader;
     }
 }

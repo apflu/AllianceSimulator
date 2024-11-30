@@ -40,7 +40,7 @@ dependencies {
 }
 
 application {
-    mainClass = "com.apflu.alliancesim.debug.CommandLineTest"
+    mainClass = "com.apflu.alliancesim.debug.versions.MilestoneCommandLine"
 }
 
 tasks.test {
