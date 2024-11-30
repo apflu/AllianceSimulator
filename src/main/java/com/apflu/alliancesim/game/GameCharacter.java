@@ -50,7 +50,7 @@ public class GameCharacter {
         if (ableToTrain == null || ableToTrain.isEmpty()) {
             throw new InvalidSkillPlanException();
         }
-        return ableToTrain.getFirst();
+        return ableToTrain.get(0);
     }
 
     public List<Skill> getCompleted() {
