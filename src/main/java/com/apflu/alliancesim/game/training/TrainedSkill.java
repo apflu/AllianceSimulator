@@ -35,7 +35,6 @@ public class TrainedSkill {
             logger.info("Skill completed: {}", this);
             throw new SkillPointsOverflowException("Training overflow; change current training", overflow);
         }
-        //logger.info(this.toString());
     }
 
     public boolean isCompleted() {

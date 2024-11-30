@@ -20,33 +20,37 @@ public class GameCharacter {
     public void updateSkill(double skillPoint) throws SkillPointsOverflowException, InvalidSkillPlanException {
         if(this.trainedSkill.getFocus() == null) {
             this.trainedSkill.setFocus(this.getNextToTrain());
-            logger.debug("Changed training to {}", this.getCurrentTrainingSkill().getName());
         }
         this.trainedSkill.incrementSkill(skillPoint);
-        logger.trace("Character {} gained {} skill points through training on skill {}.",
+        logger.info("Character {} gained {} skill points through training on skill {}.",
                 this, skillPoint, this.getCurrentTrainingSkill().getName());
     }
 
-    public void setCurrentTrainingSkill(Skill skill) throws InvalidSkillPlanException {
+    public void setCurrentTrainingSkill(Skill skill) {
         this.trainedSkill.setFocus(skill);
     }
 
-    public void setCurrentPlan(SkillPlan plan) throws InvalidSkillPlanException {
+    public void setCurrentPlan(SkillPlan plan) {
         this.currPlan = plan;
-        this.trainedSkill.setFocus(this.getNextToTrain());
         logger.debug("Changed skill plan to {}", plan.getName());
+        try {
+            this.trainedSkill.setFocus(this.getNextToTrain());
+        } catch (InvalidSkillPlanException e) {
+            throw new RuntimeException("setCurrentPlan set an invalid plan.");
+        }
     }
 
-    public Skill getCurrentTrainingSkill() throws InvalidSkillPlanException {
+    public Skill getCurrentTrainingSkill() {
         return this.trainedSkill.getFocus();
     }
 
     public Skill getNextToTrain() throws InvalidSkillPlanException {
-        try {
-            return this.currPlan.getNotIncluded(trainedSkill).get(0);
-        }catch (IndexOutOfBoundsException e) {
+        if (this.currPlan == null) throw new InvalidSkillPlanException();
+        List<Skill> ableToTrain = this.currPlan.getNotIncluded(trainedSkill);
+        if (ableToTrain == null || ableToTrain.isEmpty()) {
             throw new InvalidSkillPlanException();
         }
+        return ableToTrain.getFirst();
     }
 
     public List<Skill> getCompleted() {

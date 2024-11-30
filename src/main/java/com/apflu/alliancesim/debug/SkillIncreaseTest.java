@@ -18,7 +18,7 @@ public final class SkillIncreaseTest {
 
         while(true) {
             try{
-                SkillManager.INSTANCE.updateSkill(TestCharacters.Empty_CaldariCitizen, 60_000);
+                SkillManager.INSTANCE.updateSkill(TestCharacters.Empty_CaldariCitizen, 1_000);
             } catch (NoAvailablePlanException e) {
                 logger.info("No Available Skill Plan to Train");
                 break;
