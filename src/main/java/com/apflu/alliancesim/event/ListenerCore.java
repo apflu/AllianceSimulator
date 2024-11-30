@@ -1,4 +1,4 @@
-package com.apflu.alliancesim.events;
+package com.apflu.alliancesim.event;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,10 +8,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class EventCore {
-    public static final EventCore INSTANCE = new EventCore();
+public class ListenerCore {
+    public static final ListenerCore INSTANCE = new ListenerCore();
     private final Map<String, List<Listener>> listeners = new HashMap<>();
-    private static final Logger logger = LoggerFactory.getLogger(EventCore.class);
+    private static final Logger logger = LoggerFactory.getLogger(ListenerCore.class);
 
     public void register(Listener listener) {
         if (!listeners.containsKey(listener.getName())) {
@@ -26,7 +26,7 @@ public class EventCore {
         // TODO
     }
 
-    public EventCore notifySave() {
+    public ListenerCore notifySave() {
         List<Listener> list = listeners.get("save");
         for (Listener listener : list) {
             if (listener instanceof SaveListener saveListener) {
@@ -38,7 +38,7 @@ public class EventCore {
         return this;
     }
 
-    public EventCore notifyQuit() {
+    public ListenerCore notifyQuit() {
         List<Listener> list = listeners.get("quit");
         for (Listener listener : list) {
             if (listener instanceof QuitListener quitListener) {

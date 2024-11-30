@@ -8,6 +8,7 @@ import com.apflu.alliancesim.logging.LogMarkers
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.Marker
 import kotlinx.coroutines.*
+import java.util.function.Consumer
 
 /**
  * 此模块较为复杂。如果有一定理解上的困难的话，不必过多纠结。
@@ -42,6 +43,10 @@ object Scheduler {
                 put("module", module)
             }
         }
+    }
+
+    fun delay(interval: Long, after: () -> Unit) {
+        // TODO
     }
 
     /**
