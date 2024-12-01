@@ -14,7 +14,7 @@ public class EventHandler {
         // 没有选项的事件默认为隐藏事件，不加入队列，立刻解决。
         // 如果只是需要玩家确认的事件，也需要加入一个选项。
         if (event.getOptions().isEmpty()) {
-            event.pending();
+            event.immediate();
             event.after();
         }
     }

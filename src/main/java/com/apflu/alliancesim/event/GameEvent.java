@@ -24,7 +24,7 @@ public abstract class GameEvent {
     /**
      * 在玩家主动去选择处理这项事件时执行。一般而言，是为玩家展示事件描述，没有实际影响。
      */
-    public void pending() {}
+    public void immediate() {}
 
     /**
      * 在事件从pending list移除后执行。override时应当执行父类的此方法，除非另有需求。

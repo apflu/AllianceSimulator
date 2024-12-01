@@ -20,17 +20,10 @@ public class FixedDelayEvent extends GameEvent {
     }
 
     @Override
-    public void pending() {
-        super.pending();
+    public void after() {
         Scheduler.INSTANCE.delay(delay, () -> {
             this.after();
             return Unit.INSTANCE;
         });
-    }
-
-    @Override
-    public void after() {
-        // 显式不去触发事件链的下一项！
-        // 这里什么都不做。
     }
 }

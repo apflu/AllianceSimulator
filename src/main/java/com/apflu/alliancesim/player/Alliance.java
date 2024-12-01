@@ -18,7 +18,7 @@ public class Alliance {
      */
     public void displayCurrentEvent() {
         // TODO
-        getPendingEvents().get(0).pending();
+        getPendingEvents().get(0).immediate();
     }
 
     public void resolveEvent(GameEvent event, GameEventOption option) {
