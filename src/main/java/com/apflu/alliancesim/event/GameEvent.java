@@ -17,6 +17,14 @@ public abstract class GameEvent {
     }
 
     /**
+     * 默认所有事件都需要手动触发。override此方法来在进行自动判断时加入。
+     * @return true: 满足自动判定条件
+     */
+    public boolean isEligible() {
+        return false;
+    }
+
+    /**
      * 在事件加入pending list的那一刻执行。
      */
     public void before() {}

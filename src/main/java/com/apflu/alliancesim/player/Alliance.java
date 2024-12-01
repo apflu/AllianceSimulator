@@ -7,10 +7,13 @@ import com.apflu.alliancesim.event.GameEventOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Alliance {
     private static final Logger logger = LoggerFactory.getLogger(Alliance.class);
+    private final Map<String, Object> flags = new HashMap<>();
 
     /**
      * 获取当前最上面的那件事件，并显示给玩家。
@@ -36,5 +39,23 @@ public class Alliance {
 
     public List<GameEventLine> getActiveEventLines() {
         return EventHandler.INSTANCE.getActiveEventLines(this);
+    }
+
+    public void checkAllEligible() {
+        EventHandler.INSTANCE.checkAllEligible(this);
+    }
+
+    public Map.Entry<String, Object> getFlag(String key) {
+        return flags.entrySet().stream()
+                .filter(x -> x.getKey().equals(key))
+                .findFirst().orElse(null);
+    }
+
+    public boolean setFlag(String key, Object value) {
+        return flags.put(key, value) == null;
+    }
+
+    public boolean removeFlag(String key) {
+        return flags.remove(key) != null;
     }
 }
