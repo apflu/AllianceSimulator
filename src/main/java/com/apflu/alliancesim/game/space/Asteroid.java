@@ -2,6 +2,7 @@ package com.apflu.alliancesim.game.space;
 
 import com.apflu.alliancesim.game.Material;
 import com.apflu.alliancesim.game.SpaceObject;
+import com.apflu.alliancesim.game.equipment.ShipModule;
 import com.apflu.alliancesim.game.geography.ImportantSpaceObject;
 import com.apflu.alliancesim.game.geography.Location;
 import org.slf4j.Logger;
@@ -63,19 +64,18 @@ public class Asteroid extends SpaceObject implements ImportantSpaceObject {
      * 这里不涉及到将开采到的矿物加入船舱的动作。矿物的获得应在采矿枪的对应方法处理。
      * @param amount 伤害
      */
-    @Override
-    public void takeDamage(int amount) {
+    public void takeDamage(int amount, ShipModule source) {
         reduceVolume(amount);
         recordDamage(amount);
-        // TODO
-        if (true) { // TODO
-            onDestroy(); // 通知LocationManager潜在的地点销毁可能性
-        }
-
-        logger.trace("Asteroid taking {} damage, {} remaining.", amount, hpRemain);
+        onDamageTaken(source.getOwner(), amount);
     }
 
     @Override
     public void onDamageTaken(SpaceObject source, int amount) {
+        if (true) { // TODO: 如果血量耗尽
+            onDestroy(); // 通知LocationManager潜在的地点销毁可能性
+        }
+
+        logger.trace("Asteroid taking {} damage from {}, {} remaining.", amount, source, hpRemain);
     }
 }

@@ -15,4 +15,8 @@ public abstract class ShipModule extends Item {
     protected ShipModule() {
         super(0); // TODO: 临时解决方案。
     }
+
+    public SpaceObject getOwner() {
+        return owner;
+    }
 }

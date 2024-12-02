@@ -6,8 +6,6 @@ public abstract class SpaceObject {
      */
     protected boolean invulnerable = false;
 
-    public abstract void takeDamage(int amount);
-
     /**
      * 物件在受到伤害时触发的事件。一般包括记录log，扣减血量，以及触发特殊效果、ai判断等。
      * @param amount 伤害量
