@@ -15,22 +15,18 @@ public class EventSession {
         this.eventLineSource = eventLineSource;
     }
     public Alliance getAlliance() {
-        // TODO
         return alliance;
     }
 
     public Object getTriggerSource() {
-        // TODO
         return triggerSource;
     }
 
     public GameEventLine getEventLine() {
-        // TODO
         return eventLine;
     }
 
     public Object getEventLineSource() {
-        // TODO
         return eventLineSource;
     }
 }

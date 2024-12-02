@@ -1,16 +1,19 @@
 package com.apflu.alliancesim.event;
 
 import com.apflu.alliancesim.player.Alliance;
+import jakarta.annotation.Nonnull;
 
 import java.util.*;
 
-public class EventHandler {
+public final class EventHandler {
     public static final EventHandler INSTANCE = new EventHandler();
     private final Map<String, GameEvent> globalEventPool = new HashMap<String, GameEvent>();
 
     private final List<GameEventLine> eventLines = new ArrayList<>(); // 事件队列
 
-    public void recordEventLine(GameEventLine eventLine) {
+    private EventHandler() {}
+
+    public void triggerEventLine(GameEventLine eventLine) {
         if(eventLine != null) {
             eventLines.add(eventLine);
         }
@@ -44,10 +47,7 @@ public class EventHandler {
         // TODO
     }
 
-    public void triggerEvent(GameEvent event, Alliance target, Object source) {
-        if (event == null || target == null || source == null) {
-            return;
-        }
+    public void triggerEvent(@Nonnull GameEvent event, @Nonnull Alliance target, @Nonnull Object source) {
         event.before();
 
         // 没有选项的事件默认为隐藏事件，不加入队列，立刻解决。
@@ -66,7 +66,9 @@ public class EventHandler {
      */
     public void triggerEventLine(GameEventLine eventLine, Alliance target, Object source) {
         if (eventLine != null && source != null) {
-            EventSession eventSession = new EventSession(null, source, eventLine, source);
+            // TODO: session机制；将session转给相应的
+            EventSession eventSession = new EventSession(target, source, eventLine, source);
+            // trigger the first event as soon as event line being triggered
             eventLine.triggerNext(source);
             // log or handle the event session as needed
         }
