@@ -17,6 +17,7 @@ public class EventHandler {
     }
 
     public void registerEvent(GameEvent event) {
+        globalEventPool.put(event.getClass().getSimpleName(), event);
         // TODO
     }
 
@@ -44,7 +45,9 @@ public class EventHandler {
     }
 
     public void triggerEvent(GameEvent event, Alliance target, Object source) {
-        // TODO
+        if (event == null || target == null || source == null) {
+            return;
+        }
         event.before();
 
         // 没有选项的事件默认为隐藏事件，不加入队列，立刻解决。
