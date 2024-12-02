@@ -45,5 +45,13 @@ public class SpaceShip extends SpaceObject implements ShipType, ImportantSpaceOb
         return new ArrayList<>(moduleList);
     }
 
+    public boolean isCapitalShip() {
+        // TODO
+        return false;
+    }
 
+    public boolean isSuperCapitalShip() {
+        // TODO
+        return false;
+    }
 }

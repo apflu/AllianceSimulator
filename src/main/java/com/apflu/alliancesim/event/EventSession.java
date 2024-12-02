@@ -1,6 +1,7 @@
 package com.apflu.alliancesim.event;
 
 import com.apflu.alliancesim.player.Alliance;
+import org.jetbrains.annotations.Nullable;
 
 public class EventSession {
     private final Alliance alliance;
@@ -18,14 +19,17 @@ public class EventSession {
         return alliance;
     }
 
+    @Nullable
     public Object getTriggerSource() {
         return triggerSource;
     }
 
+    @Nullable
     public GameEventLine getEventLine() {
         return eventLine;
     }
 
+    @Nullable
     public Object getEventLineSource() {
         return eventLineSource;
     }

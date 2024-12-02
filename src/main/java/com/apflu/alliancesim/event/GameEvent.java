@@ -1,10 +1,11 @@
 package com.apflu.alliancesim.event;
 
 import java.util.List;
+import java.util.Optional;
 
 public abstract class GameEvent {
     protected final EventSession session;
-    private final List<GameEventOption> options;
+    protected final List<GameEventOption> options;
 
     public GameEvent(EventSession session, GameEventOption... options) {
         this.session = session;
@@ -15,6 +16,9 @@ public abstract class GameEvent {
         this.session = session;
         this.options = options;
     }
+
+    public abstract String getText();
+    public abstract String getDescription();
 
     /**
      * 默认所有事件都需要手动触发。override此方法来在进行自动判断时加入。
@@ -39,7 +43,8 @@ public abstract class GameEvent {
      */
     public void after() {
         // 某些事件可能有不同的trigger！
-        session.getEventLine().triggerNext(session.getTriggerSource());
+        Optional.ofNullable(session.getEventLine())
+                .ifPresent(eventLine -> eventLine.triggerNext(session.getEventLineSource()));
     }
     public void timeout() {}
 

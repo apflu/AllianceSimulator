@@ -1,5 +1,6 @@
 package com.apflu.alliancesim.game;
 
+import com.apflu.alliancesim.game.space.SpaceShip;
 import com.apflu.alliancesim.game.training.SkillPlan;
 import com.apflu.alliancesim.game.training.SkillSet;
 import com.apflu.alliancesim.game.training.TrainedSkill;
@@ -10,12 +11,15 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class GameCharacter {
     private static final Logger logger = LoggerFactory.getLogger(GameCharacter.class);
     private final SkillSet trainedSkill = new SkillSet();
     private SkillPlan currPlan;
+    private String name;
+    private SpaceShip currentShip;
 
     public void updateSkill(double skillPoint) throws SkillPointsOverflowException, InvalidSkillPlanException {
         if(this.trainedSkill.getFocus() == null) {
@@ -61,4 +65,28 @@ public class GameCharacter {
         return this.trainedSkill.getLv(skill);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof GameCharacter that)) return false;
+        return Objects.equals(name, that.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name);
+    }
+
+    public boolean isInSpace() {
+        // TODO
+        return false;
+    }
+
+    public SpaceShip getCurrentShip() {
+        return currentShip;
+    }
+
+    public void setCurrentShip(SpaceShip currentShip) {
+        this.currentShip = currentShip;
+    }
 }
