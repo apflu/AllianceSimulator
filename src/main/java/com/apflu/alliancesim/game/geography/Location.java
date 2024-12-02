@@ -24,4 +24,14 @@ public class Location {
     public List<SpaceObject> getImportantList() {
         return new ArrayList<>(ImportantList);
     }
+
+    public Location addObject(SpaceObject object) {
+        // TODO
+        return this;
+    }
+
+    public Location addImportantObject(SpaceObject object) {
+        // TODO
+        return this;
+    }
 }

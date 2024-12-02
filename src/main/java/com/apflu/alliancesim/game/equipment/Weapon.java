@@ -1,6 +1,6 @@
 package com.apflu.alliancesim.game.equipment;
 
-import com.apflu.alliancesim.events.InvalidSpaceTargetException;
+import com.apflu.alliancesim.util.exceptions.InvalidSpaceTargetException;
 import com.apflu.alliancesim.game.SpaceObject;
 import com.apflu.alliancesim.logging.LogMarkers;
 import com.apflu.alliancesim.util.Validator;

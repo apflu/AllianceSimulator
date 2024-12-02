@@ -2,7 +2,9 @@ package com.apflu.alliancesim.util;
 
 import com.apflu.alliancesim.game.Material;
 import com.apflu.alliancesim.game.geography.Location;
+import com.apflu.alliancesim.game.geography.LocationManager;
 import com.apflu.alliancesim.game.geography.SolarSystem;
+import com.apflu.alliancesim.game.space.Asteroid;
 
 public class AsteroidBuilder implements LocationBuilder {
     private final SolarSystem solarSystem;
@@ -50,14 +52,21 @@ public class AsteroidBuilder implements LocationBuilder {
         return null;
     }
 
-    public boolean isValid() {
+    protected boolean isValid() {
         return (solarSystem != null) && (material != null) && (amount > 0);
     }
 
     @Override
     public Location build() {
-        // TODO
-        return null;
+        if (!isValid()) {
+            throw new IllegalArgumentException();
+        }
+
+        if (location == null) {
+            return LocationManager.INSTANCE.register(new Asteroid()); // TODO constructor
+        }
+
+        return location.addObject(new Asteroid()); // TODO: Asteroid constructor
     }
 
     public Location batchBuild(int amount) {

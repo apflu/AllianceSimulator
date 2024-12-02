@@ -36,7 +36,7 @@ public class SpaceShip extends SpaceObject implements ShipType, ImportantSpaceOb
      * @param amount 伤害量
      */
     @Override
-    public void takeDamage(int amount) {
+    public void onDamageTaken(SpaceObject source, int amount) {
         // TODO
     }
 

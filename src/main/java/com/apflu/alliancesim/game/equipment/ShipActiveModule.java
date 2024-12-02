@@ -1,10 +1,10 @@
 package com.apflu.alliancesim.game.equipment;
 
-import com.apflu.alliancesim.events.InvalidSpaceTargetException;
+import com.apflu.alliancesim.util.exceptions.InvalidSpaceTargetException;
 import com.apflu.alliancesim.game.SpaceObject;
 import com.apflu.alliancesim.util.Validator;
 import com.apflu.alliancesim.util.Validators;
-import gameschedule.Scheduler;
+import com.apflu.alliancesim.gameschedule.Scheduler;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
