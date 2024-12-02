@@ -1,0 +1,13 @@
+#!/bin/bash
+
+COMMIT_MSG_FILE=$1
+CURRENT_MSG=$(cat "$COMMIT_MSG_FILE")
+LAST_MSG=$(git log -1 --pretty=%B)
+
+if [ "$CURRENT_MSG" == "$LAST_MSG" ]; then
+    echo "Error: Commit message must be different from the previous commit message." >&2
+    exit 1
+fi
+
+# 如果不同，允许提交
+exit 0
