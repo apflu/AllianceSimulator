@@ -2,14 +2,19 @@ package com.apflu.alliancesim.event;
 
 import com.apflu.alliancesim.player.Alliance;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class EventHandler {
     public static final EventHandler INSTANCE = new EventHandler();
     private final Map<String, GameEvent> globalEventPool = new HashMap<String, GameEvent>();
+
+    private final List<GameEventLine> eventLines = new ArrayList<>(); // 事件队列
+
+    public void recordEventLine(GameEventLine eventLine) {
+        if(eventLine != null) {
+            eventLines.add(eventLine);
+        }
+    }
 
     public void registerEvent(GameEvent event) {
         // TODO
@@ -50,7 +55,18 @@ public class EventHandler {
         }
     }
 
-    public void triggerEventLine(GameEventLine event, Alliance target, Object source) {
+    /**
+     * 触发事件链的下一个事件。
+     * @param eventLine 事件链
+     * @param target 目标
+     * @param source 来源
+     */
+    public void triggerEventLine(GameEventLine eventLine, Alliance target, Object source) {
+        if (eventLine != null && source != null) {
+            EventSession eventSession = new EventSession(null, source, eventLine, source);
+            eventLine.triggerNext(source);
+            // log or handle the event session as needed
+        }
         // TODO
     }
 
