@@ -53,6 +53,11 @@ public class Asteroid extends SpaceObject implements ImportantSpaceObject {
         return type;
     }
 
+    public void recordDamage(int amount) {
+        hpRemain -= amount;
+        logger.info("Asteroid of type {} took {} damage, {} volume remaining.", type, amount, volume);
+    }
+
     /**
      * 小行星受到伤害时（被开采）会损失体积。如果体积耗尽，小行星将会死亡。<br>
      * 这里不涉及到将开采到的矿物加入船舱的动作。矿物的获得应在采矿枪的对应方法处理。
@@ -60,6 +65,8 @@ public class Asteroid extends SpaceObject implements ImportantSpaceObject {
      */
     @Override
     public void takeDamage(int amount) {
+        reduceVolume(amount);
+        recordDamage(amount);
         // TODO
         if (true) { // TODO
             onDestroy(); // 通知LocationManager潜在的地点销毁可能性
@@ -68,4 +75,7 @@ public class Asteroid extends SpaceObject implements ImportantSpaceObject {
         logger.trace("Asteroid taking {} damage, {} remaining.", amount, hpRemain);
     }
 
+    @Override
+    public void onDamageTaken(SpaceObject source, int amount) {
+    }
 }
