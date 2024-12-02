@@ -42,8 +42,11 @@ public class MiningEquipment extends Weapon {
         targetAsteroid.reduceVolume(finalDamage);
 
         // 对矿石造成体积伤害
+        targetAsteroid.takeDamage(finalDamage);
 
         // 添加矿石到船只货仓
+        // 输出日志
+        System.out.println("Ship " + owner + " gathered " + finalDamage + " " + targetAsteroid.getType() + " from Asteroid");
 
         // 最后记录挖矿事件完成
         logger.info(LogMarkers.MINING, "{} finished mining {} for {} units.",
