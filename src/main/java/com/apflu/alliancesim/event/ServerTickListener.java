@@ -1,8 +1,8 @@
 package com.apflu.alliancesim.event;
 
-public interface SaveListener extends Listener {
+public interface ServerTickListener extends Listener {
     @Override
     default String getName() {
-        return "save";
+        return "servertick";
     }
 }

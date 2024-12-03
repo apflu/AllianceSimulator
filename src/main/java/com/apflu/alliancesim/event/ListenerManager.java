@@ -1,5 +1,7 @@
 package com.apflu.alliancesim.event;
 
+import com.apflu.alliancesim.gameschedule.Scheduler;
+import kotlin.Unit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -8,10 +10,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ListenerCore {
-    public static final ListenerCore INSTANCE = new ListenerCore();
+public class ListenerManager {
+    public static final ListenerManager INSTANCE = new ListenerManager();
     private final Map<String, List<Listener>> listeners = new HashMap<>();
-    private static final Logger logger = LoggerFactory.getLogger(ListenerCore.class);
+    private static final Logger logger = LoggerFactory.getLogger(ListenerManager.class);
+
+    /**
+     * start the server tick
+     */
+    public void start() {
+        Scheduler.INSTANCE.registerAsLoop(() -> {
+            // TODO
+            return Unit.INSTANCE;
+        });
+    }
 
     public void register(Listener listener) {
         if (!listeners.containsKey(listener.getName())) {
@@ -26,11 +38,11 @@ public class ListenerCore {
         // TODO
     }
 
-    public ListenerCore notifySave() {
+    public ListenerManager notifySave() {
         List<Listener> list = listeners.get("save");
         for (Listener listener : list) {
             if (listener instanceof SaveListener saveListener) {
-                saveListener.onSave();
+                saveListener.onNotify();
             } else {
                 warnDuplicate(listener);
             }
@@ -38,14 +50,34 @@ public class ListenerCore {
         return this;
     }
 
-    public ListenerCore notifyQuit() {
+    public ListenerManager notifyQuit() {
         List<Listener> list = listeners.get("quit");
         for (Listener listener : list) {
             if (listener instanceof QuitListener quitListener) {
-                quitListener.onQuit();
+                quitListener.onNotify();
             } else {
                 warnDuplicate(listener);
             }
+        }
+        return this;
+    }
+
+    public ListenerManager notifyServerTick() {
+        List<Listener> list = listeners.get("servertick");
+        for (Listener listener : list) {
+            if (listener instanceof ServerTickListener serverTickListener) {
+                serverTickListener.onNotify();
+            } else {
+                warnDuplicate(listener);
+            }
+        }
+        return this;
+    }
+
+    public ListenerManager doNotify(String name) {
+        List<Listener> list = listeners.get(name);
+        for (Listener listener : list) {
+            listener.onNotify();
         }
         return this;
     }

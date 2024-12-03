@@ -45,10 +45,6 @@ object Scheduler {
         }
     }
 
-    fun delay(interval: Long, after: () -> Unit) {
-        // TODO
-    }
-
     /**
      * 停止武器/
      */
@@ -57,6 +53,14 @@ object Scheduler {
         targetJob?.cancel()
         jobMap.remove(module)
         logger.trace { "unregistered module ${module.name} for its timer." }
+    }
+
+    fun delay(interval: Long, after: () -> Unit) {
+        // TODO
+    }
+
+    fun registerAsLoop(method: () -> Unit) {
+        // TODO
     }
 
     fun startSkillUpdater(updater: SkillUpdaterBuilder, runWhenIntersectExist: Boolean = true) {
