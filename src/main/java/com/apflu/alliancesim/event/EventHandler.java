@@ -1,17 +1,23 @@
 package com.apflu.alliancesim.event;
 
+import com.apflu.alliancesim.command.ConsoleAppender;
 import com.apflu.alliancesim.player.Alliance;
 import jakarta.annotation.Nonnull;
 
+import java.io.IOException;
 import java.util.*;
 
 public final class EventHandler {
     public static final EventHandler INSTANCE = new EventHandler();
     private final Map<String, GameEvent> globalEventPool = new HashMap<String, GameEvent>();
+    private final ConsoleAppender consoleAppender;
 
     private final List<GameEventLine> eventLines = new ArrayList<>(); // 事件队列
 
-    private EventHandler() {}
+    public EventHandler() throws IOException {
+        this.consoleAppender = ConsoleAppender.create();
+    }
+
 
     public void triggerEventLine(GameEventLine eventLine) {
         if(eventLine != null) {
@@ -48,13 +54,22 @@ public final class EventHandler {
     }
 
     public void triggerEvent(@Nonnull GameEvent event, @Nonnull Alliance target, @Nonnull Object source) {
+        if (event == null || target == null || source == null) {
+            return;
+        }
+
         event.before();
+        consoleAppender.print(event.getText());
 
         // 没有选项的事件默认为隐藏事件，不加入队列，立刻解决。
         // 如果只是需要玩家确认的事件，也需要加入一个选项。
+
         if (event.getOptions().isEmpty()) {
             event.immediate();
             event.after();
+        } else {
+            // Add event to the target's event queue
+            // TODO: Implement event queue for the target
         }
     }
 

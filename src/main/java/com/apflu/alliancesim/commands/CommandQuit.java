@@ -12,8 +12,7 @@ public class CommandQuit extends Command {
     @Override
     public void execute(CommandArgs input) {
         logger.info("Attempting to quit. Notifying quit listeners...");
-        ListenerManager.INSTANCE.notifySave()
-                .notifyQuit();
+        ListenerManager.INSTANCE.notifySave().notifyQuit();
 
         AllianceSim.end();
 
