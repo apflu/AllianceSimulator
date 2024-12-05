@@ -8,7 +8,16 @@ import java.io.IOException;
 import java.util.*;
 
 public final class EventHandler {
-    public static final EventHandler INSTANCE = new EventHandler();
+    public static final EventHandler INSTANCE;
+
+    static {
+        try {
+            INSTANCE = new EventHandler();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private final Map<String, GameEvent> globalEventPool = new HashMap<String, GameEvent>();
     private final ConsoleAppender consoleAppender;
 
