@@ -20,6 +20,16 @@ public class FixedDelayEvent extends GameEvent {
     }
 
     @Override
+    public String getText() {
+        return "";
+    }
+
+    @Override
+    public String getDescription() {
+        return "";
+    }
+
+    @Override
     public void after() {
         Scheduler.INSTANCE.delay(delay, () -> {
             this.after();

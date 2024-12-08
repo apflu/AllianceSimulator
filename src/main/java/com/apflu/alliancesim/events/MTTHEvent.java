@@ -23,6 +23,16 @@ public class MTTHEvent extends GameEvent {
     // 名字留作纪念意义。
 
     @Override
+    public String getText() {
+        return "";
+    }
+
+    @Override
+    public String getDescription() {
+        return "";
+    }
+
+    @Override
     public void after() {
         long delay = generateGaussianDelay(meanTime);
         Scheduler.INSTANCE.delay(delay, () -> {
