@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 from typing import cast
 
 import discord
+import structlog
 
 from alliancesim.adapters.inbound.discord.bot import (
     AllianceDiscordClient,
@@ -39,9 +40,11 @@ class UnusedCommands:
 class CapturingDiscordCommands:
     def __init__(self) -> None:
         self.start_call: tuple[str, str, str] | None = None
+        self.context: dict[str, object] = {}
 
     async def start(self, user_id: str, name: str, interaction_id: str) -> MessageView:
         self.start_call = (user_id, name, interaction_id)
+        self.context = structlog.contextvars.get_contextvars()
         return MessageView("Created", name)
 
 
@@ -93,6 +96,7 @@ async def test_discord_start_handler_defers_and_uses_followup() -> None:
     await client.start_command(cast(discord.Interaction, fake), "Handler Union")
     assert fake.response.deferred is True
     assert captured.start_call == ("42", "Handler Union", "9001")
+    assert captured.context == {"platform": "discord", "request_id": "9001"}
     assert fake.followup.embeds[0].title == "Created"
 
 

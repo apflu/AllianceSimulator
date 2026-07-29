@@ -5,10 +5,13 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 import discord
+import structlog
 from discord import app_commands
 
 from alliancesim.application.chat_commands import ChatCommandAdapter
 from alliancesim.application.views import MessageView, ViewAction
+
+logger = structlog.get_logger()
 
 
 def discord_embed(view: MessageView) -> discord.Embed:
@@ -142,32 +145,68 @@ class AllianceDiscordClient(discord.Client):
             else:
                 await interaction.response.send_message(embed=discord_embed(view), ephemeral=True)
 
+    async def _run_command(
+        self,
+        interaction: discord.Interaction,
+        command: str,
+        operation: Callable[[], Awaitable[MessageView]],
+        *,
+        action_id: str | None = None,
+    ) -> None:
+        with structlog.contextvars.bound_contextvars(
+            request_id=str(interaction.id), platform="discord"
+        ):
+            logger.info("platform_command_started", command=command, action_id=action_id)
+            view = await operation()
+            await self._respond(interaction, view)
+            logger.info(
+                "platform_command_completed",
+                command=command,
+                action_id=action_id,
+                is_error=view.is_error,
+            )
+
     async def handle_event_action(self, interaction: discord.Interaction, action_id: str) -> None:
         await interaction.response.defer(ephemeral=True)
-        result = await self._commands.resolve_action(str(interaction.user.id), action_id)
-        await self._respond(interaction, result)
+        await self._run_command(
+            interaction,
+            "resolve_event",
+            lambda: self._commands.resolve_action(str(interaction.user.id), action_id),
+            action_id=action_id,
+        )
 
     async def start_command(self, interaction: discord.Interaction, name: str) -> None:
         await interaction.response.defer(ephemeral=True)
-        view = await self._commands.start(str(interaction.user.id), name, str(interaction.id))
-        await self._respond(interaction, view)
+        await self._run_command(
+            interaction,
+            "start",
+            lambda: self._commands.start(str(interaction.user.id), name, str(interaction.id)),
+        )
 
     async def status_command(self, interaction: discord.Interaction) -> None:
         await interaction.response.defer(ephemeral=True)
-        view = await self._commands.status(str(interaction.user.id))
-        await self._respond(interaction, view)
+        await self._run_command(
+            interaction, "status", lambda: self._commands.status(str(interaction.user.id))
+        )
 
     async def mine_command(self, interaction: discord.Interaction) -> None:
         await interaction.response.defer(ephemeral=True)
-        view = await self._commands.mine(str(interaction.user.id), str(interaction.id))
-        await self._respond(interaction, view)
+        await self._run_command(
+            interaction,
+            "mine",
+            lambda: self._commands.mine(str(interaction.user.id), str(interaction.id)),
+        )
 
     async def train_command(self, interaction: discord.Interaction) -> None:
         await interaction.response.defer(ephemeral=True)
-        view = await self._commands.train(str(interaction.user.id), str(interaction.id))
-        await self._respond(interaction, view)
+        await self._run_command(
+            interaction,
+            "train",
+            lambda: self._commands.train(str(interaction.user.id), str(interaction.id)),
+        )
 
     async def events_command(self, interaction: discord.Interaction) -> None:
         await interaction.response.defer(ephemeral=True)
-        view = await self._commands.events(str(interaction.user.id))
-        await self._respond(interaction, view)
+        await self._run_command(
+            interaction, "events", lambda: self._commands.events(str(interaction.user.id))
+        )

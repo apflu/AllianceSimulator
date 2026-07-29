@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import cast
 
+import structlog
 from aiogram.filters.command import CommandObject
 from aiogram.types import CallbackQuery, Message
 
@@ -21,10 +22,12 @@ class UnusedCommands:
 class CapturingTelegramCommands:
     def __init__(self, sequence: list[str] | None = None) -> None:
         self.start_call: tuple[str, str, str] | None = None
+        self.context: dict[str, object] = {}
         self._sequence = sequence
 
     async def start(self, user_id: str, name: str, interaction_id: str) -> MessageView:
         self.start_call = (user_id, name, interaction_id)
+        self.context = structlog.contextvars.get_contextvars()
         return MessageView("Created", name)
 
     async def resolve_action(self, user_id: str, action_id: str) -> MessageView:
@@ -66,6 +69,7 @@ class FakeTelegramBot:
 
 
 class FakeTelegramCallback:
+    id = "callback-99"
     data = "event:00000000-0000-0000-0000-000000000001:take"
     from_user = FakeTelegramUser()
 
@@ -91,6 +95,7 @@ async def test_telegram_start_handler_uses_stable_message_identity() -> None:
     command = CommandObject(command="start", args="Handler Union")
     await adapter.start_command(cast(Message, fake), command)
     assert captured.start_call == ("42", "Handler Union", "700:11")
+    assert captured.context == {"platform": "telegram", "request_id": "700:11"}
     assert fake.answers == ["Created\n\nHandler Union"]
 
 
