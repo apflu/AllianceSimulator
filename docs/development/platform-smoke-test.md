@@ -15,6 +15,9 @@
 4. Telegram Bot 应允许与测试账号私聊。
    无法直连 Telegram API 时，在 `.env` 设置 `ASIM_TELEGRAM_PROXY_URL`（支持 HTTP 或 SOCKS）；
    容器访问 Windows 主机代理时使用 `host.docker.internal`，不能使用容器自身的 `127.0.0.1`。
+5. Discord 玩家测试开始前执行 `docker compose logs discord`，确认日志依次出现
+   `discord_commands_synced` 和 `discord_bot_ready`；前者应显示 5 条命令。全局命令同步可能需要
+   较长时间，测试服务器优先配置 `ASIM_DISCORD_GUILD_ID` 使用 guild scope。
 
 token 只能放在本地环境或密钥系统中，不提交到仓库，也不粘贴到测试报告。
 

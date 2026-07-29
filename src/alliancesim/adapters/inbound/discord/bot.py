@@ -119,7 +119,22 @@ class AllianceDiscordClient(discord.Client):
         )
 
     async def setup_hook(self) -> None:
-        await self.tree.sync(guild=self._guild)
+        synced_commands = await self.tree.sync(guild=self._guild)
+        logger.info(
+            "discord_commands_synced",
+            command_count=len(synced_commands),
+            command_scope="guild" if self._guild is not None else "global",
+        )
+
+    async def on_ready(self) -> None:
+        logger.info(
+            "discord_bot_ready",
+            command_count=len(self.tree.get_commands(guild=self._guild)),
+            command_scope="guild" if self._guild is not None else "global",
+        )
+
+    async def on_disconnect(self) -> None:
+        logger.warning("discord_bot_disconnected")
 
     async def close(self) -> None:
         try:

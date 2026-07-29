@@ -4,9 +4,11 @@ import re
 import uuid
 from datetime import UTC, datetime
 from typing import cast
+from unittest.mock import AsyncMock, patch
 
 import discord
 import structlog
+from structlog.testing import capture_logs
 
 from alliancesim.adapters.inbound.discord.bot import (
     AllianceDiscordClient,
@@ -87,6 +89,32 @@ def test_discord_client_registers_mvp_slash_commands() -> None:
     client = AllianceDiscordClient(commands, guild_id=123)
     names = {command.name for command in client.tree.get_commands(guild=discord.Object(id=123))}
     assert names == {"start", "status", "mine", "train", "events"}
+
+
+async def test_discord_client_reports_command_sync_and_gateway_readiness() -> None:
+    commands = cast(ChatCommandAdapter, UnusedCommands())
+    client = AllianceDiscordClient(commands, guild_id=123)
+    sync = AsyncMock(return_value=[object()] * 5)
+
+    with patch.object(client.tree, "sync", sync), capture_logs() as logs:
+        await client.setup_hook()
+        await client.on_ready()
+
+    assert sync.await_count == 1
+    assert logs == [
+        {
+            "command_count": 5,
+            "command_scope": "guild",
+            "event": "discord_commands_synced",
+            "log_level": "info",
+        },
+        {
+            "command_count": 5,
+            "command_scope": "guild",
+            "event": "discord_bot_ready",
+            "log_level": "info",
+        },
+    ]
 
 
 async def test_discord_start_handler_defers_and_uses_followup() -> None:
