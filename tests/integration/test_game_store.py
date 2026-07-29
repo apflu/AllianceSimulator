@@ -109,3 +109,25 @@ async def test_failed_notification_is_retried_after_backoff(tmp_path: Path) -> N
         assert (await store.claim_notifications(NOW + timedelta(seconds=2), limit=1)) == ()
         retried = await store.claim_notifications(NOW + timedelta(seconds=4), limit=1)
         assert len(retried) == 1
+
+
+async def test_discord_and_telegram_produce_equivalent_game_state(tmp_path: Path) -> None:
+    rules = MiningRules(duration=timedelta(minutes=3), base_yield=75)
+    async with game_database(tmp_path / "parity.sqlite3") as (_, store):
+        service = GameService(store, clock=lambda: NOW, mining_rules=rules)
+        for platform, user_id in (
+            (Platform.DISCORD, "discord-user"),
+            (Platform.TELEGRAM, "telegram-user"),
+        ):
+            await service.create_alliance(platform, user_id, "Parity Union", f"{platform}-start")
+            await service.start_mining(platform, user_id, f"{platform}-mine")
+
+        discord_status = await service.get_status(Platform.DISCORD, "discord-user")
+        telegram_status = await service.get_status(Platform.TELEGRAM, "telegram-user")
+        assert discord_status.name == telegram_status.name
+        assert discord_status.character_name == telegram_status.character_name
+        assert discord_status.ship_name == telegram_status.ship_name
+        assert discord_status.active_action is not None
+        assert telegram_status.active_action is not None
+        assert discord_status.active_action.action_type == telegram_status.active_action.action_type
+        assert discord_status.active_action.finishes_at == telegram_status.active_action.finishes_at

@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     worker_poll_interval_seconds: float = Field(default=1.0, gt=0, le=60)
     discord_token: SecretStr | None = None
     discord_guild_id: int | None = None
+    telegram_token: SecretStr | None = None
 
 
 @lru_cache

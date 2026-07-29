@@ -6,10 +6,22 @@ from typing import Protocol
 
 from alliancesim.application.models import PendingNotification
 from alliancesim.application.ports import GameStore
+from alliancesim.domain.identity import Platform
 
 
 class NotificationSender(Protocol):
     async def send(self, notification: PendingNotification) -> None: ...
+
+
+class RoutingNotificationSender:
+    def __init__(self, senders: dict[Platform, NotificationSender]) -> None:
+        self._senders = dict(senders)
+
+    async def send(self, notification: PendingNotification) -> None:
+        sender = self._senders.get(notification.platform)
+        if sender is None:
+            raise RuntimeError(f"no sender configured for {notification.platform}")
+        await sender.send(notification)
 
 
 class ActionWorkerPoller:

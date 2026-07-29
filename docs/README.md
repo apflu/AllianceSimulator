@@ -6,6 +6,7 @@
 
 - [产品愿景](product/vision.md)：我们在做什么，以及刻意不做什么。
 - [MVP 范围](product/mvp-scope.md)：首个可玩版本包含和不包含的内容。
+- [平台身份与账号策略](product/account-linking.md)：Discord、Telegram 身份隔离与未来绑定方案。
 
 ## 架构
 

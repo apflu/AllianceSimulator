@@ -7,14 +7,19 @@ import structlog
 
 from alliancesim.adapters.outbound.notifications.discord import (
     DiscordNotificationSender,
-    UnavailableNotificationSender,
 )
+from alliancesim.adapters.outbound.notifications.telegram import TelegramNotificationSender
 from alliancesim.adapters.outbound.persistence.database import Database
 from alliancesim.adapters.outbound.persistence.game_store import SqlAlchemyGameStore
-from alliancesim.application.notifications import ActionWorkerPoller, NotificationSender
+from alliancesim.application.notifications import (
+    ActionWorkerPoller,
+    NotificationSender,
+    RoutingNotificationSender,
+)
 from alliancesim.application.ports import WorkPoller
 from alliancesim.bootstrap.logging import configure_logging
 from alliancesim.bootstrap.settings import get_settings
+from alliancesim.domain.identity import Platform
 
 logger = structlog.get_logger()
 
@@ -47,11 +52,16 @@ async def run_worker() -> None:
     configure_logging(settings.log_level)
     database = Database(settings.database_url)
     store = SqlAlchemyGameStore(database.sessions)
-    sender: NotificationSender = (
-        DiscordNotificationSender(settings.discord_token.get_secret_value())
-        if settings.discord_token is not None
-        else UnavailableNotificationSender()
-    )
+    senders: dict[Platform, NotificationSender] = {}
+    if settings.discord_token is not None:
+        senders[Platform.DISCORD] = DiscordNotificationSender(
+            settings.discord_token.get_secret_value()
+        )
+    if settings.telegram_token is not None:
+        senders[Platform.TELEGRAM] = TelegramNotificationSender(
+            settings.telegram_token.get_secret_value()
+        )
+    sender = RoutingNotificationSender(senders)
     worker = Worker(
         ActionWorkerPoller(store, sender),
         settings.worker_poll_interval_seconds,

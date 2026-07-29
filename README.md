@@ -41,6 +41,7 @@ uv run alembic upgrade head
 ```powershell
 uv run alliancesim-api
 uv run alliancesim-discord
+uv run alliancesim-telegram
 uv run alliancesim-worker
 ```
 
@@ -55,3 +56,4 @@ uv run pytest
 
 密钥和本地 `.env` 不应提交。数据库连接默认读取 `ASIM_DATABASE_URL`。
 Discord Bot 需要 `ASIM_DISCORD_TOKEN`；开发时可以设置 `ASIM_DISCORD_GUILD_ID`，以便命令立即同步到测试服务器。
+Telegram Bot 需要 `ASIM_TELEGRAM_TOKEN`。
