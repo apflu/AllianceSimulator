@@ -17,6 +17,8 @@ from alliancesim.application.models import (
     PendingNotification,
     PlatformRef,
     StartMiningRequest,
+    StartTrainingRequest,
+    TrainingStarted,
 )
 from alliancesim.application.views import MessageView, ViewField
 
@@ -29,7 +31,7 @@ def test_discord_client_registers_mvp_slash_commands() -> None:
     commands = cast(ChatCommandAdapter, UnusedCommands())
     client = AllianceDiscordClient(commands, guild_id=123)
     names = {command.name for command in client.tree.get_commands(guild=discord.Object(id=123))}
-    assert names == {"start", "status", "mine"}
+    assert names == {"start", "status", "mine", "train"}
 
 
 def test_discord_embed_preserves_platform_neutral_view() -> None:
@@ -61,6 +63,19 @@ class StubStore:
     async def start_mining(self, request: StartMiningRequest) -> MiningStarted:
         return MiningStarted(uuid.UUID(int=4), request.plan.finishes_at, 100, True)
 
+    async def get_skill_level(self, identity: PlatformRef, skill_id: str) -> int:
+        del identity, skill_id
+        return 0
+
+    async def start_training(self, request: StartTrainingRequest) -> TrainingStarted:
+        return TrainingStarted(
+            uuid.UUID(int=5),
+            request.plan.skill_id,
+            request.plan.target_level,
+            request.plan.finishes_at,
+            True,
+        )
+
     async def complete_due_actions(self, now: datetime, *, limit: int) -> CompletionBatch:
         del now, limit
         return CompletionBatch(())
@@ -88,5 +103,7 @@ async def test_discord_chat_commands_return_views_without_sdk_objects() -> None:
     commands = ChatCommandAdapter(service, Platform.DISCORD)
     created = await commands.start("42", "Test Alliance", "interaction-1")
     status = await commands.status("42")
+    training = await commands.train("42", "interaction-2")
     assert created.title == "联盟已建立"
     assert status.title == "Test Alliance"
+    assert training.title == "技能训练已开始"

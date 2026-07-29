@@ -45,6 +45,14 @@ class AllianceDiscordClient(discord.Client):
             ),
             guild=self._guild,
         )
+        self.tree.add_command(
+            app_commands.Command(
+                name="train",
+                description="训练采矿技能",
+                callback=self.train_command,
+            ),
+            guild=self._guild,
+        )
 
     async def setup_hook(self) -> None:
         await self.tree.sync(guild=self._guild)
@@ -63,4 +71,8 @@ class AllianceDiscordClient(discord.Client):
 
     async def mine_command(self, interaction: discord.Interaction) -> None:
         view = await self._commands.mine(str(interaction.user.id), str(interaction.id))
+        await self._respond(interaction, view)
+
+    async def train_command(self, interaction: discord.Interaction) -> None:
+        view = await self._commands.train(str(interaction.user.id), str(interaction.id))
         await self._respond(interaction, view)

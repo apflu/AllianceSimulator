@@ -10,15 +10,19 @@ from alliancesim.application.models import (
     MiningStarted,
     PlatformRef,
     StartMiningRequest,
+    StartTrainingRequest,
+    TrainingStarted,
 )
 from alliancesim.application.ports import GameStore
 from alliancesim.domain.content import (
+    MINING_OPERATIONS_RULES,
     STARTER_LOCATION_ID,
     STARTER_MATERIAL_ID,
     STARTER_MINING_RULES,
 )
 from alliancesim.domain.identity import AllianceName, Platform
 from alliancesim.domain.mining import MiningRules, plan_mining
+from alliancesim.domain.training import SkillRules, plan_training
 
 
 class GameService:
@@ -28,10 +32,12 @@ class GameService:
         *,
         clock: Callable[[], datetime] | None = None,
         mining_rules: MiningRules = STARTER_MINING_RULES,
+        skill_rules: SkillRules = MINING_OPERATIONS_RULES,
     ) -> None:
         self._store = store
         self._clock = clock or (lambda: datetime.now(UTC))
         self._mining_rules = mining_rules
+        self._skill_rules = skill_rules
 
     async def create_alliance(
         self,
@@ -58,7 +64,14 @@ class GameService:
         platform_user_id: str,
         idempotency_key: str,
     ) -> MiningStarted:
-        plan = plan_mining(self._clock(), self._mining_rules)
+        skill_level = await self._store.get_skill_level(
+            PlatformRef(platform, platform_user_id), self._skill_rules.skill_id
+        )
+        plan = plan_mining(
+            self._clock(),
+            self._mining_rules,
+            yield_bonus_basis_points=(skill_level * self._skill_rules.bonus_basis_points_per_level),
+        )
         return await self._store.start_mining(
             StartMiningRequest(
                 identity=PlatformRef(platform, platform_user_id),
@@ -67,4 +80,17 @@ class GameService:
                 location_id=STARTER_LOCATION_ID,
                 material_id=STARTER_MATERIAL_ID,
             )
+        )
+
+    async def start_training(
+        self,
+        platform: Platform,
+        platform_user_id: str,
+        idempotency_key: str,
+    ) -> TrainingStarted:
+        identity = PlatformRef(platform, platform_user_id)
+        current_level = await self._store.get_skill_level(identity, self._skill_rules.skill_id)
+        plan = plan_training(self._clock(), current_level, self._skill_rules)
+        return await self._store.start_training(
+            StartTrainingRequest(identity=identity, idempotency_key=idempotency_key, plan=plan)
         )

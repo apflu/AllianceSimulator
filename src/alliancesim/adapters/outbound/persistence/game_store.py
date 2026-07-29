@@ -18,7 +18,10 @@ from alliancesim.application.models import (
     MiningStarted,
     PendingNotification,
     PlatformRef,
+    SkillLevel,
     StartMiningRequest,
+    StartTrainingRequest,
+    TrainingStarted,
 )
 from alliancesim.domain.content import (
     STARTER_CHARACTER_NAME,
@@ -31,6 +34,7 @@ from alliancesim.domain.identity import Platform
 from .models import (
     AllianceRow,
     CharacterRow,
+    CharacterSkillRow,
     InventoryItemRow,
     NotificationOutboxRow,
     PlatformIdentityRow,
@@ -129,6 +133,13 @@ class SqlAlchemyGameStore:
                     .order_by(InventoryItemRow.material_id)
                 )
             ).all()
+            skill_rows = (
+                await session.scalars(
+                    select(CharacterSkillRow)
+                    .where(CharacterSkillRow.character_id == character.id)
+                    .order_by(CharacterSkillRow.skill_id)
+                )
+            ).all()
             action = await session.scalar(
                 select(TimedActionRow)
                 .where(TimedActionRow.alliance_id == alliance.id, TimedActionRow.status == "active")
@@ -151,6 +162,7 @@ class SqlAlchemyGameStore:
                     InventoryItem(row.material_id, row.quantity) for row in inventory_rows
                 ),
                 active_action=active_action,
+                skills=tuple(SkillLevel(row.skill_id, row.level) for row in skill_rows),
             )
 
     async def _existing_action(
@@ -165,12 +177,107 @@ class SqlAlchemyGameStore:
 
     @staticmethod
     def _mining_started(action: TimedActionRow, *, created: bool) -> MiningStarted:
+        if action.yield_quantity is None:
+            raise ValueError("mining action is missing its yield snapshot")
         return MiningStarted(
             action_id=action.id,
             finishes_at=_aware_utc(action.finishes_at),
             yield_quantity=action.yield_quantity,
             created=created,
         )
+
+    async def get_skill_level(self, identity: PlatformRef, skill_id: str) -> int:
+        async with self._sessions() as session:
+            alliance = await self._alliance_for_identity(session, identity)
+            if alliance is None:
+                raise NotFoundError("create an alliance first")
+            character_id = await session.scalar(
+                select(CharacterRow.id)
+                .where(CharacterRow.alliance_id == alliance.id)
+                .order_by(CharacterRow.id)
+                .limit(1)
+            )
+            if character_id is None:
+                raise NotFoundError("the alliance has no usable starter character")
+            level = await session.scalar(
+                select(CharacterSkillRow.level).where(
+                    CharacterSkillRow.character_id == character_id,
+                    CharacterSkillRow.skill_id == skill_id,
+                )
+            )
+            return level or 0
+
+    @staticmethod
+    def _training_started(action: TimedActionRow, *, created: bool) -> TrainingStarted:
+        if action.skill_id is None or action.target_level is None:
+            raise ValueError("training action is missing its skill snapshot")
+        return TrainingStarted(
+            action_id=action.id,
+            skill_id=action.skill_id,
+            target_level=action.target_level,
+            finishes_at=_aware_utc(action.finishes_at),
+            created=created,
+        )
+
+    async def start_training(self, request: StartTrainingRequest) -> TrainingStarted:
+        alliance_id: uuid.UUID | None = None
+        try:
+            async with self._sessions() as session, session.begin():
+                alliance = await self._alliance_for_identity(session, request.identity)
+                if alliance is None:
+                    raise NotFoundError("create an alliance first")
+                alliance_id = alliance.id
+                existing = await self._existing_action(
+                    session, alliance.id, request.idempotency_key
+                )
+                if existing is not None:
+                    return self._training_started(existing, created=False)
+                active = await session.scalar(
+                    select(TimedActionRow.id).where(
+                        TimedActionRow.alliance_id == alliance.id,
+                        TimedActionRow.status == "active",
+                    )
+                )
+                if active is not None:
+                    raise ConflictError("the alliance already has an active action")
+                character_id = await session.scalar(
+                    select(CharacterRow.id)
+                    .where(CharacterRow.alliance_id == alliance.id)
+                    .order_by(CharacterRow.id)
+                    .limit(1)
+                )
+                if character_id is None:
+                    raise NotFoundError("the alliance has no usable starter character")
+                action = TimedActionRow(
+                    alliance_id=alliance.id,
+                    character_id=character_id,
+                    ship_id=None,
+                    action_type="skill_training",
+                    location_id=None,
+                    material_id=None,
+                    status="active",
+                    started_at=request.plan.started_at,
+                    finishes_at=request.plan.finishes_at,
+                    yield_quantity=None,
+                    skill_id=request.plan.skill_id,
+                    target_level=request.plan.target_level,
+                    rules_version=request.plan.rules_version,
+                    idempotency_key=request.idempotency_key,
+                    notification_platform=request.identity.platform.value,
+                    notification_user_id=request.identity.user_id,
+                )
+                session.add(action)
+                await session.flush()
+                return self._training_started(action, created=True)
+        except IntegrityError as error:
+            if alliance_id is not None:
+                async with self._sessions() as session:
+                    existing = await self._existing_action(
+                        session, alliance_id, request.idempotency_key
+                    )
+                    if existing is not None:
+                        return self._training_started(existing, created=False)
+            raise ConflictError("the character is already busy") from error
 
     async def start_mining(self, request: StartMiningRequest) -> MiningStarted:
         alliance_id: uuid.UUID | None = None
@@ -252,22 +359,55 @@ class SqlAlchemyGameStore:
                 )
             ).all()
             for action in actions:
-                inventory = await session.scalar(
-                    select(InventoryItemRow)
-                    .where(
-                        InventoryItemRow.alliance_id == action.alliance_id,
-                        InventoryItemRow.material_id == action.material_id,
+                if action.action_type == "mining":
+                    if action.material_id is None or action.yield_quantity is None:
+                        raise ValueError("mining action has incomplete result data")
+                    inventory = await session.scalar(
+                        select(InventoryItemRow)
+                        .where(
+                            InventoryItemRow.alliance_id == action.alliance_id,
+                            InventoryItemRow.material_id == action.material_id,
+                        )
+                        .with_for_update()
                     )
-                    .with_for_update()
-                )
-                if inventory is None:
-                    inventory = InventoryItemRow(
-                        alliance_id=action.alliance_id,
-                        material_id=action.material_id,
-                        quantity=0,
+                    if inventory is None:
+                        inventory = InventoryItemRow(
+                            alliance_id=action.alliance_id,
+                            material_id=action.material_id,
+                            quantity=0,
+                        )
+                        session.add(inventory)
+                    inventory.quantity += action.yield_quantity
+                    event_type = "mining_completed"
+                    payload: dict[str, object] = {
+                        "action_id": str(action.id),
+                        "material_id": action.material_id,
+                        "quantity": action.yield_quantity,
+                    }
+                elif action.action_type == "skill_training":
+                    if action.skill_id is None or action.target_level is None:
+                        raise ValueError("training action has incomplete result data")
+                    skill = await session.get(
+                        CharacterSkillRow,
+                        (action.character_id, action.skill_id),
+                        with_for_update=True,
                     )
-                    session.add(inventory)
-                inventory.quantity += action.yield_quantity
+                    if skill is None:
+                        skill = CharacterSkillRow(
+                            character_id=action.character_id,
+                            skill_id=action.skill_id,
+                            level=0,
+                        )
+                        session.add(skill)
+                    skill.level = max(skill.level, action.target_level)
+                    event_type = "skill_training_completed"
+                    payload = {
+                        "action_id": str(action.id),
+                        "skill_id": action.skill_id,
+                        "level": action.target_level,
+                    }
+                else:
+                    raise ValueError(f"unsupported timed action type: {action.action_type}")
                 action.status = "completed"
                 action.completed_at = now
                 session.add(
@@ -275,12 +415,8 @@ class SqlAlchemyGameStore:
                         source_action_id=action.id,
                         platform=action.notification_platform,
                         platform_user_id=action.notification_user_id,
-                        event_type="mining_completed",
-                        payload={
-                            "action_id": str(action.id),
-                            "material_id": action.material_id,
-                            "quantity": action.yield_quantity,
-                        },
+                        event_type=event_type,
+                        payload=payload,
                         status="pending",
                         available_at=now,
                     )

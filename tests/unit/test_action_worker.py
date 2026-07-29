@@ -12,6 +12,8 @@ from alliancesim.application.models import (
     PendingNotification,
     PlatformRef,
     StartMiningRequest,
+    StartTrainingRequest,
+    TrainingStarted,
 )
 from alliancesim.application.notifications import ActionWorkerPoller
 from alliancesim.domain.identity import Platform
@@ -60,6 +62,12 @@ class WorkerStore:
         raise AssertionError(identity)
 
     async def start_mining(self, request: StartMiningRequest) -> MiningStarted:
+        raise AssertionError(request)
+
+    async def get_skill_level(self, identity: PlatformRef, skill_id: str) -> int:
+        raise AssertionError((identity, skill_id))
+
+    async def start_training(self, request: StartTrainingRequest) -> TrainingStarted:
         raise AssertionError(request)
 
 

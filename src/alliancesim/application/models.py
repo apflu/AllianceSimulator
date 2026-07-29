@@ -7,6 +7,7 @@ from typing import Any
 
 from alliancesim.domain.identity import Platform
 from alliancesim.domain.mining import MiningPlan
+from alliancesim.domain.training import TrainingPlan
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,6 +53,13 @@ class AllianceStatus:
     ship_name: str
     inventory: tuple[InventoryItem, ...]
     active_action: ActiveAction | None
+    skills: tuple[SkillLevel, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class SkillLevel:
+    skill_id: str
+    level: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -68,6 +76,22 @@ class MiningStarted:
     action_id: uuid.UUID
     finishes_at: datetime
     yield_quantity: int
+    created: bool
+
+
+@dataclass(frozen=True, slots=True)
+class StartTrainingRequest:
+    identity: PlatformRef
+    idempotency_key: str
+    plan: TrainingPlan
+
+
+@dataclass(frozen=True, slots=True)
+class TrainingStarted:
+    action_id: uuid.UUID
+    skill_id: str
+    target_level: int
+    finishes_at: datetime
     created: bool
 
 

@@ -13,6 +13,8 @@ from alliancesim.application.models import (
     PendingNotification,
     PlatformRef,
     StartMiningRequest,
+    StartTrainingRequest,
+    TrainingStarted,
 )
 
 
@@ -30,6 +32,10 @@ class GameStore(Protocol):
     async def get_status(self, identity: PlatformRef) -> AllianceStatus: ...
 
     async def start_mining(self, request: StartMiningRequest) -> MiningStarted: ...
+
+    async def get_skill_level(self, identity: PlatformRef, skill_id: str) -> int: ...
+
+    async def start_training(self, request: StartTrainingRequest) -> TrainingStarted: ...
 
     async def complete_due_actions(self, now: datetime, *, limit: int) -> CompletionBatch: ...
 

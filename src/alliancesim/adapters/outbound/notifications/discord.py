@@ -13,6 +13,10 @@ def notification_text(notification: PendingNotification) -> str:
         material = str(notification.payload["material_id"])
         quantity = int(notification.payload["quantity"])
         return f"采矿行动已经完成：联盟库存获得 {quantity} {material}。"
+    if notification.event_type == "skill_training_completed":
+        skill_id = str(notification.payload["skill_id"])
+        level = int(notification.payload["level"])
+        return f"技能训练已经完成：{skill_id} 达到 {level} 级。"
     return f"联盟发生了新事件：{notification.event_type}"
 
 

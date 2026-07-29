@@ -14,6 +14,7 @@ from alliancesim.application.errors import ConflictError, NotFoundError
 from alliancesim.application.game_service import GameService
 from alliancesim.domain.identity import Platform
 from alliancesim.domain.mining import MiningRules
+from alliancesim.domain.training import SkillRules
 
 NOW = datetime(2026, 7, 30, 12, 0, tzinfo=UTC)
 
@@ -131,3 +132,32 @@ async def test_discord_and_telegram_produce_equivalent_game_state(tmp_path: Path
         assert telegram_status.active_action is not None
         assert discord_status.active_action.action_type == telegram_status.active_action.action_type
         assert discord_status.active_action.finishes_at == telegram_status.active_action.finishes_at
+
+
+async def test_training_persists_and_increases_future_mining_yield(tmp_path: Path) -> None:
+    current_time = [NOW]
+    mining_rules = MiningRules(duration=timedelta(minutes=1), base_yield=100)
+    skill_rules = SkillRules("mining-operations", timedelta(minutes=2), 5, 1_000)
+    async with game_database(tmp_path / "training.sqlite3") as (_, store):
+        service = GameService(
+            store,
+            clock=lambda: current_time[0],
+            mining_rules=mining_rules,
+            skill_rules=skill_rules,
+        )
+        await service.create_alliance(Platform.DISCORD, "trainee", "Training Union", "start")
+        training = await service.start_training(Platform.DISCORD, "trainee", "train-1")
+        duplicate = await service.start_training(Platform.DISCORD, "trainee", "train-1")
+        assert training.target_level == 1
+        assert duplicate.action_id == training.action_id
+        assert duplicate.created is False
+
+        current_time[0] = NOW + timedelta(minutes=2)
+        assert (await store.complete_due_actions(current_time[0], limit=10)).count == 1
+        status = await service.get_status(Platform.DISCORD, "trainee")
+        assert [(skill.skill_id, skill.level) for skill in status.skills] == [
+            ("mining-operations", 1)
+        ]
+
+        mining = await service.start_mining(Platform.DISCORD, "trainee", "mine-after-training")
+        assert mining.yield_quantity == 110

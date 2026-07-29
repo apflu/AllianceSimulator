@@ -80,6 +80,17 @@ class CharacterRow(Base):
     mining_bonus_basis_points: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
 
+class CharacterSkillRow(Base):
+    __tablename__ = "character_skills"
+    __table_args__ = (CheckConstraint("level >= 0", name="nonnegative_level"),)
+
+    character_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("characters.id"), primary_key=True
+    )
+    skill_id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    level: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+
 class ShipRow(Base):
     __tablename__ = "ships"
 
@@ -128,17 +139,19 @@ class TimedActionRow(Base):
     character_id: Mapped[uuid.UUID] = mapped_column(
         Uuid, ForeignKey("characters.id"), nullable=False
     )
-    ship_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("ships.id"), nullable=False)
+    ship_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("ships.id"))
     action_type: Mapped[str] = mapped_column(String(40), nullable=False)
-    location_id: Mapped[str] = mapped_column(String(80), nullable=False)
-    material_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    location_id: Mapped[str | None] = mapped_column(String(80))
+    material_id: Mapped[str | None] = mapped_column(String(80))
     status: Mapped[str] = mapped_column(String(20), nullable=False)
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     finishes_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, index=True
     )
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    yield_quantity: Mapped[int] = mapped_column(Integer, nullable=False)
+    yield_quantity: Mapped[int | None] = mapped_column(Integer)
+    skill_id: Mapped[str | None] = mapped_column(String(80))
+    target_level: Mapped[int | None] = mapped_column(Integer)
     rules_version: Mapped[str] = mapped_column(String(40), nullable=False)
     idempotency_key: Mapped[str] = mapped_column(String(120), nullable=False)
     notification_platform: Mapped[str] = mapped_column(String(20), nullable=False)

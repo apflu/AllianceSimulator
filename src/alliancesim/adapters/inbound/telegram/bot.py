@@ -22,6 +22,7 @@ class AllianceTelegramRouter:
         self.router.message.register(self.start_command, Command("start"))
         self.router.message.register(self.status_command, Command("status"))
         self.router.message.register(self.mine_command, Command("mine"))
+        self.router.message.register(self.train_command, Command("train"))
 
     @staticmethod
     def _user_id(message: Message) -> str:
@@ -47,4 +48,8 @@ class AllianceTelegramRouter:
 
     async def mine_command(self, message: Message) -> None:
         view = await self._commands.mine(self._user_id(message), self._interaction_id(message))
+        await message.answer(telegram_text(view))
+
+    async def train_command(self, message: Message) -> None:
+        view = await self._commands.train(self._user_id(message), self._interaction_id(message))
         await message.answer(telegram_text(view))

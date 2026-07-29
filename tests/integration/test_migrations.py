@@ -21,6 +21,7 @@ def test_migrations_upgrade_downgrade_and_upgrade(tmp_path: Path) -> None:
         "platform_identities",
         "alliances",
         "characters",
+        "character_skills",
         "ships",
         "inventory_items",
         "timed_actions",

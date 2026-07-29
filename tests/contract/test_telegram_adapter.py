@@ -14,7 +14,7 @@ class UnusedCommands:
 def test_telegram_router_registers_mvp_commands() -> None:
     commands = cast(ChatCommandAdapter, UnusedCommands())
     adapter = AllianceTelegramRouter(commands)
-    assert len(adapter.router.message.handlers) == 3
+    assert len(adapter.router.message.handlers) == 4
 
 
 def test_telegram_text_preserves_platform_neutral_view() -> None:

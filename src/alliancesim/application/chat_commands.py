@@ -35,6 +35,9 @@ class ChatCommandAdapter:
             "\n".join(f"{item.material_id}: {item.quantity}" for item in result.inventory)
             or "暂无资源"
         )
+        skills = (
+            "\n".join(f"{skill.skill_id}: {skill.level}" for skill in result.skills) or "尚未训练"
+        )
         action = (
             f"{result.active_action.action_type}，完成于 "
             f"{result.active_action.finishes_at.isoformat()}"
@@ -48,6 +51,7 @@ class ChatCommandAdapter:
                 ViewField("成员", result.character_name, inline=True),
                 ViewField("舰船", result.ship_name, inline=True),
                 ViewField("库存", inventory),
+                ViewField("技能", skills),
                 ViewField("当前行动", action),
             ),
         )
@@ -65,4 +69,16 @@ class ChatCommandAdapter:
                 ViewField("预计完成", result.finishes_at.isoformat()),
                 ViewField("预计产量", str(result.yield_quantity), inline=True),
             ),
+        )
+
+    async def train(self, user_id: str, interaction_id: str) -> MessageView:
+        try:
+            result = await self._service.start_training(self._platform, user_id, interaction_id)
+        except (ApplicationError, ValueError) as error:
+            return MessageView("无法开始训练", str(error), is_error=True)
+        prefix = "技能训练已开始" if result.created else "技能训练已经登记"
+        return MessageView(
+            prefix,
+            f"正在训练 {result.skill_id} 到 {result.target_level} 级。",
+            (ViewField("预计完成", result.finishes_at.isoformat()),),
         )
