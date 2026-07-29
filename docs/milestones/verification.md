@@ -6,13 +6,24 @@
 
 ## 已取得的证据
 
-### 本地全量质量门槛
+### Docker 全量质量门槛
 
 - `ruff format --check`：通过；
 - `ruff check`：通过；
 - `pyright` 严格模式：0 错误、0 警告；
-- 无外部平台和 PostgreSQL 时：45 项测试通过，2 项 PostgreSQL 专属测试按条件跳过；
-- API 进程实际启动，`/health/live` 返回 HTTP 200 和 `x-request-id`。
+- 独立临时 PostgreSQL 中：48 项测试全部通过，包含 3 项 PostgreSQL 专属测试；
+- 无 PostgreSQL 时仍可运行核心套件：45 项通过，3 项数据库专属测试按条件跳过；
+- 质量数据库使用临时文件系统，不连接或修改玩家存档；
+- CI 除上述门槛外还校验 Compose 配置并构建运行镜像。
+
+### 完整 Docker 运行栈
+
+- 固定摘要的 Python 3.13/uv 基础镜像按 `uv.lock` 构建成功，运行镜像不包含开发依赖；
+- Compose 等待 PostgreSQL 健康后执行 Alembic，迁移容器以退出码 0 结束；
+- API 和 Worker 容器以非 root 用户运行，API `/health/ready` 返回 HTTP 200；
+- Telegram 容器使用 `host.docker.internal` 访问 Windows 本地代理，真实 Bot 完成身份校验并进入轮询；
+- 应用、Worker 和平台入口共用同一镜像，Discord/Telegram 通过 profile 按需启动；
+- PostgreSQL `postgres-data` volume 在重建应用容器后保持，验收存档未被删除。
 
 ### 真实 PostgreSQL 17.9
 
@@ -20,10 +31,12 @@
 
 1. 从空数据库升级到 Alembic head；
 2. 降级到 base 后再次完整升级；
-3. 两个独立 Worker 同时认领同一到期采矿行动；
-4. 最终只有一个 Worker 完成结算，联盟库存只增加一次 100 `raw-ore`。
+3. 含采矿、训练和通知历史的数据安全降级到不支持训练的旧结构，再升级到 head；
+4. 两个独立 Worker 同时认领同一到期采矿行动；
+5. 最终只有一个 Worker 完成结算，联盟库存只增加一次 100 `raw-ore`。
 
-便携数据库已在验证后停止并清理。CI 使用 PostgreSQL 17 service 重复执行相同门槛。
+便携数据库已在验证后停止并清理。当前 Docker 质量 profile 使用独立 PostgreSQL 17 临时文件系统
+重复执行相同门槛。
 
 ### 完整玩家旅程
 
@@ -88,7 +101,7 @@
 | Discord 入口 | 五个 slash command、component、handler 与渲染契约测试 | 自动验证通过；真实平台待验收 |
 | Telegram 对等入口 | 五个 command、inline keyboard、callback、通知、对等状态测试及真实 Bot 完整旅程 | 通过 |
 | 联盟事件及明确结果 | 唯一触发、内容快照、幂等选项、24 小时默认结果测试 | 通过 |
-| 单元、集成和适配器契约测试 | 45 项本地测试及 2 项 PostgreSQL 专属测试 | 通过 |
+| 单元、集成和适配器契约测试 | Docker 中 48 项测试全部通过，包含 3 项 PostgreSQL 专属测试 | 通过 |
 
 ### MVP 指标审计
 

@@ -28,39 +28,41 @@ MVP 功能实现与自动化验证已经完成，真实 Telegram Bot 冒烟已�
 测试服务器完成剩余验收；自动化与 Telegram 实测证据见
 [MVP 验证报告](docs/milestones/verification.md)。
 
-## 本地开发
+## Docker 启动
 
-需要 Python 3.13+、uv 和 PostgreSQL。仓库提供的 `compose.yaml` 可用于启动本地数据库：
+需要 Docker Desktop。复制本地配置后，可用 Compose 启动 PostgreSQL、数据库迁移、API 和 Worker；
+主机不需要安装 Python 或 uv：
 
 ```powershell
-docker compose up -d postgres
 Copy-Item .env.example .env
-uv sync
-uv run alembic upgrade head
+docker compose up -d --build --wait
 ```
 
-启动 HTTP 健康检查和 Worker：
+按需启用聊天平台入口：
 
 ```powershell
-uv run alliancesim-api
-uv run alliancesim-discord
-uv run alliancesim-telegram
-uv run alliancesim-worker
+docker compose --profile telegram up -d --build --wait
+docker compose --profile discord up -d --build --wait
 ```
 
-运行全部本地质量检查：
+完整说明见 [Docker 运行方式](docs/development/docker.md)。密钥和本地 `.env` 不应提交；
+容器内数据库地址由 Compose 设置。
+
+## Docker 质量检查
+
+质量镜像包含锁定的开发依赖和测试，不要求主机安装 Python：
 
 ```powershell
-uv run ruff format --check .
-uv run ruff check .
-uv run pyright
-uv run pytest
+docker compose --profile quality build quality
+docker compose --profile quality run --rm quality uv run --no-sync ruff format --check .
+docker compose --profile quality run --rm quality uv run --no-sync ruff check .
+docker compose --profile quality run --rm quality uv run --no-sync pyright
+docker compose --profile quality run --rm quality
 ```
 
-密钥和本地 `.env` 不应提交。数据库连接默认读取 `ASIM_DATABASE_URL`。
 Discord Bot 需要 `ASIM_DISCORD_TOKEN`；开发时可以设置 `ASIM_DISCORD_GUILD_ID`，以便命令立即同步到测试服务器。
 Telegram Bot 需要 `ASIM_TELEGRAM_TOKEN`。
-无法直连 Telegram API 时，可以设置 `ASIM_TELEGRAM_PROXY_URL`；轮询与主动通知会共用该代理。
+无法直连 Telegram API 时，可以设置 `ASIM_TELEGRAM_PROXY_URL`；容器中的轮询与主动通知会共用该代理。
 
 两个聊天平台提供相同的玩家命令：
 

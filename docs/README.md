@@ -29,6 +29,7 @@
 ## 开发
 
 - [开发与提交工作流](development/workflow.md)：小目标、提交边界、检查和远端操作约定。
+- [Docker 运行方式](development/docker.md)：完整服务栈、平台 profile、代理与存档操作。
 - [平台冒烟测试](development/platform-smoke-test.md)：Discord 与 Telegram 的最终外部验收步骤。
 
 ## 参考

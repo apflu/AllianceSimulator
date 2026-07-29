@@ -34,3 +34,5 @@ jobs:
       - run: uv run ruff check .
       - run: uv run pyright
       - run: uv run pytest
+      - run: docker compose config --quiet
+      - run: docker build --tag alliance-simulator:test .

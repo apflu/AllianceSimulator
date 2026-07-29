@@ -2,12 +2,19 @@
 
 ## 准备
 
-1. 启动 PostgreSQL，并执行 `uv run alembic upgrade head`。
-2. 从 `.env.example` 创建本地 `.env`，填写测试 Bot token。
+1. 从 `.env.example` 创建本地 `.env`，填写测试 Bot token。
+2. 使用 Docker Compose 启动数据库、迁移、API、Worker 和待测 Bot：
+
+   ```powershell
+   docker compose --profile telegram up -d --build --wait
+   docker compose --profile discord up -d --build --wait
+   ```
+
+   只执行当前要测试的平台命令；需要同时运行时可同时给出两个 profile。
 3. Discord Bot 需要 application command 和向测试用户发送私信的权限；建议配置 `ASIM_DISCORD_GUILD_ID` 加速命令同步。
 4. Telegram Bot 应允许与测试账号私聊。
-   无法直连 Telegram API 时，在 `.env` 设置 `ASIM_TELEGRAM_PROXY_URL`（支持 HTTP 或 SOCKS）。
-5. 分别启动 `alliancesim-worker`、`alliancesim-discord` 和 `alliancesim-telegram`。
+   无法直连 Telegram API 时，在 `.env` 设置 `ASIM_TELEGRAM_PROXY_URL`（支持 HTTP 或 SOCKS）；
+   容器访问 Windows 主机代理时使用 `host.docker.internal`，不能使用容器自身的 `127.0.0.1`。
 
 token 只能放在本地环境或密钥系统中，不提交到仓库，也不粘贴到测试报告。
 

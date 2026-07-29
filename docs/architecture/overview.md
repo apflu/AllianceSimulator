@@ -13,6 +13,10 @@
 这些进程可以部署在同一主机上，入口之间不通过网络互调。初期不拆微服务；清晰的模块边界
 用于控制耦合，而不是增加网络调用。
 
+MVP 使用一个锁定依赖的应用镜像承载上述进程。Docker Compose 先等待 PostgreSQL 健康并在独立
+容器中执行迁移，再启动 API、Worker 和所选平台入口；Telegram 与 Discord 通过 profile 按需启用。
+质量检查使用单独的镜像阶段和临时 PostgreSQL，不接触玩家存档数据库。
+
 ```mermaid
 flowchart LR
     Discord["Discord"] --> DA["Discord adapter"]
