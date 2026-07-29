@@ -3,7 +3,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     host: str = "127.0.0.1"
     port: int = Field(default=8000, ge=1, le=65535)
     worker_poll_interval_seconds: float = Field(default=1.0, gt=0, le=60)
+    discord_token: SecretStr | None = None
+    discord_guild_id: int | None = None
 
 
 @lru_cache

@@ -5,16 +5,18 @@ from contextlib import suppress
 
 import structlog
 
+from alliancesim.adapters.outbound.notifications.discord import (
+    DiscordNotificationSender,
+    UnavailableNotificationSender,
+)
+from alliancesim.adapters.outbound.persistence.database import Database
+from alliancesim.adapters.outbound.persistence.game_store import SqlAlchemyGameStore
+from alliancesim.application.notifications import ActionWorkerPoller, NotificationSender
 from alliancesim.application.ports import WorkPoller
 from alliancesim.bootstrap.logging import configure_logging
 from alliancesim.bootstrap.settings import get_settings
 
 logger = structlog.get_logger()
-
-
-class EmptyPoller:
-    async def poll_once(self) -> int:
-        return 0
 
 
 class Worker:
@@ -43,12 +45,24 @@ class Worker:
 async def run_worker() -> None:
     settings = get_settings()
     configure_logging(settings.log_level)
-    worker = Worker(EmptyPoller(), settings.worker_poll_interval_seconds)
+    database = Database(settings.database_url)
+    store = SqlAlchemyGameStore(database.sessions)
+    sender: NotificationSender = (
+        DiscordNotificationSender(settings.discord_token.get_secret_value())
+        if settings.discord_token is not None
+        else UnavailableNotificationSender()
+    )
+    worker = Worker(
+        ActionWorkerPoller(store, sender),
+        settings.worker_poll_interval_seconds,
+    )
     try:
         await worker.run()
     except asyncio.CancelledError:
         worker.stop()
         raise
+    finally:
+        await database.close()
 
 
 def main() -> None:
