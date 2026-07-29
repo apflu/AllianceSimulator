@@ -2,7 +2,7 @@
 
 - 验证日期：2026-07-30
 - 分支：`python-rewrite`
-- 状态：实现与自动化验证完成；真实 Discord/Telegram 冒烟待执行
+- 状态：实现与自动化验证完成；真实 Telegram 冒烟通过，Discord 冒烟待执行
 
 ## 已取得的证据
 
@@ -38,6 +38,20 @@
 7. 后续采矿产量由 100 提升到 110；
 8. 最终状态、库存和技能均可查询。
 
+### 真实 Telegram Bot（2026-07-30）
+
+使用 Docker PostgreSQL 17、真实 Telegram Bot 私聊和本地 HTTP 代理完成完整流程：
+
+1. `/start` 创建联盟，`/status` 展示 New Capsuleer、Pioneer、空库存和空闲状态；
+2. `/mine` 展示 100 预计产量，到期后主动通知首次投递成功；
+3. `/events` 返回两个 inline keyboard 选项，选择 `analyze` 后获得 1 `research-data`；
+4. 再次点击同一旧按钮未重复发放资源；
+5. `/train` 完成后收到主动通知，状态显示 `mining-operations: 1`；
+6. 后续 `/mine` 展示并结算 110 产量，最终库存为 210 `raw-ore` 和 1 `research-data`。
+
+数据库终态确认三项行动均为 `completed`、没有活动行动，三条 outbox 通知均在首次尝试后为
+`sent`。测试未记录 token、Telegram 用户 ID 或聊天 ID。
+
 ### 关键不变量
 
 - 重复创建联盟和重复开始行动不会创建第二份状态；
@@ -72,7 +86,7 @@
 | 重启后结算逾期行动 | 关闭并重建数据库适配器后的结算与状态测试 | 通过 |
 | 事务性通知发件箱和安全重试 | 行动与 outbox 同事务；租约认领、退避、终止状态及发送器测试 | 通过 |
 | Discord 入口 | 五个 slash command、component、handler 与渲染契约测试 | 自动验证通过；真实平台待验收 |
-| Telegram 对等入口 | 五个 command、inline keyboard、callback、通知与对等状态测试 | 自动验证通过；真实平台待验收 |
+| Telegram 对等入口 | 五个 command、inline keyboard、callback、通知、对等状态测试及真实 Bot 完整旅程 | 通过 |
 | 联盟事件及明确结果 | 唯一触发、内容快照、幂等选项、24 小时默认结果测试 | 通过 |
 | 单元、集成和适配器契约测试 | 45 项本地测试及 2 项 PostgreSQL 专属测试 | 通过 |
 
@@ -82,19 +96,18 @@
 |---|---|---|
 | 重复平台交互不重复发放资源 | 行动唯一幂等键、事件解析幂等测试 | 通过 |
 | 停服重启后最终且仅结算一次 | 重启集成测试与真实 PostgreSQL 双 Worker 测试 | 通过 |
-| 两个平台产生等价领域结果 | 平台对等集成测试与共用 `GameService`/`ChatCommandAdapter` | 自动验证通过；真实平台待验收 |
+| 两个平台产生等价领域结果 | 平台对等集成测试、共用 `GameService`/`ChatCommandAdapter` 与真实 Telegram 旅程 | 自动验证与 Telegram 实测通过；Discord 待验收 |
 | 核心测试无需平台 API | 全量本地测试使用 fake/mock sender 和平台对象 | 通过 |
 | 首次采矿无需修改数据库 | `test_player_completes_mvp_journey_without_database_edits` | 通过 |
 
 ## 尚缺的外部验证
 
-自动化测试不能证明真实 Bot token、平台权限、命令同步和私信策略均已正确配置。以下两项仍需在测试环境执行：
+Telegram 的真实 token、代理、轮询、私聊、inline keyboard 和主动通知已经验证。以下 Discord
+项目仍需在测试环境执行：
 
 - Discord 测试服务器完成 `/start → /status → /mine → /events → /train`；
-- Telegram 私聊完成同一流程，并验证 inline keyboard 回调和主动通知。
 
 执行步骤见[平台冒烟测试](../development/platform-smoke-test.md)。完成并记录结果后，才能把 MVP 状态改为“全部验收完成”。
 
-本地配置审计（2026-07-30）确认 `ASIM_DISCORD_TOKEN`、`ASIM_TELEGRAM_TOKEN` 和
-`ASIM_DISCORD_GUILD_ID` 均未配置，因此当前不能代替用户执行真实平台步骤。此结论只记录配置
-是否存在，不读取或记录任何 token 值。
+当前 `ASIM_DISCORD_TOKEN` 与 `ASIM_DISCORD_GUILD_ID` 未配置，且 Discord Developer Portal
+暂时不可用；此结论只记录配置是否存在，不读取或记录任何 token 值。

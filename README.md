@@ -6,7 +6,8 @@
 
 ## 当前状态
 
-MVP 功能实现与自动化验证已经完成，等待真实 Discord 和 Telegram 测试 Bot 的最终冒烟验收。已经确定：
+MVP 功能实现与自动化验证已经完成，真实 Telegram Bot 冒烟已通过；当前等待 Discord
+测试服务器的最终冒烟验收。已经确定：
 
 - 权威后端使用 Python；
 - PostgreSQL 是游戏状态的唯一事实来源；
@@ -24,7 +25,7 @@ MVP 功能实现与自动化验证已经完成，等待真实 Discord 和 Telegr
 - [里程碑路线图](docs/milestones/README.md)
 
 下一项工作是按[平台冒烟测试](docs/development/platform-smoke-test.md)在真实 Discord
-测试服务器和 Telegram 私聊中完成最终验收；自动化范围与现有证据见
+测试服务器完成剩余验收；自动化与 Telegram 实测证据见
 [MVP 验证报告](docs/milestones/verification.md)。
 
 ## 本地开发

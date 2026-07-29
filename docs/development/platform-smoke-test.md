@@ -25,12 +25,15 @@ token 只能放在本地环境或密钥系统中，不提交到仓库，也不�
 
 ## Telegram
 
-- [ ] `/start <联盟名称>`、`/status` 和 `/mine` 产生与 Discord 等价的游戏状态。
-- [ ] 到期后收到主动消息。
-- [ ] `/events` 返回 inline keyboard，回调可以成功解决事件。
-- [ ] 重复回调不会重复发放资源。
-- [ ] `/train` 完成后，后续采矿产量提升到 110。
+- [x] `/start <联盟名称>`、`/status` 和 `/mine` 产生与 Discord 等价的游戏状态。
+- [x] 到期后收到主动消息。
+- [x] `/events` 返回 inline keyboard，回调可以成功解决事件。
+- [x] 重复回调不会重复发放资源。
+- [x] `/train` 完成后，后续采矿产量提升到 110。
 
 ## 记录
 
 完成后在 [MVP 验证报告](../milestones/verification.md) 中填写日期、测试平台和结果，不记录 token、用户 ID、服务器 ID 或聊天 ID。若平台测试失败，应记录可复现的命令、响应类别和日志关联 ID。
+
+- 2026-07-30：Telegram 全流程通过；玩家可见结果与 PostgreSQL 终态一致。
+- Discord：待 Developer Portal 可用并配置测试 Bot 后执行。
