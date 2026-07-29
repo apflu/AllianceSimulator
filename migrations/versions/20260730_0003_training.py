@@ -40,6 +40,20 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    # Revision 0002 can only represent mining actions. Remove outbox rows first because they
+    # reference timed_actions, then discard training history before restoring mining-only
+    # NOT NULL constraints. Dropping character_skills below is intentionally lossy as well.
+    op.execute(
+        sa.text(
+            """
+            DELETE FROM notification_outbox
+            WHERE source_action_id IN (
+                SELECT id FROM timed_actions WHERE action_type <> 'mining'
+            )
+            """
+        )
+    )
+    op.execute(sa.text("DELETE FROM timed_actions WHERE action_type <> 'mining'"))
     with op.batch_alter_table("timed_actions") as batch_op:
         batch_op.drop_column("target_level")
         batch_op.drop_column("skill_id")

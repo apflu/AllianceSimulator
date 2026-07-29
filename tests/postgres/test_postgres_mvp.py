@@ -7,6 +7,7 @@ from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 
 import pytest
+import sqlalchemy as sa
 from alembic import command
 from alembic.config import Config
 
@@ -43,6 +44,73 @@ def test_postgres_migrations_downgrade_and_upgrade() -> None:
     command.upgrade(config, "head")
     command.downgrade(config, "base")
     command.upgrade(config, "head")
+
+
+async def create_mining_and_training_history() -> tuple[uuid.UUID, uuid.UUID]:
+    if POSTGRES_URL is None:
+        raise RuntimeError("ASIM_TEST_POSTGRES_URL is required")
+    database = Database(POSTGRES_URL)
+    store = SqlAlchemyGameStore(database.sessions)
+    now = datetime(2026, 7, 30, tzinfo=UTC)
+    user_id = f"downgrade-{uuid.uuid4()}"
+    try:
+        service = GameService(store, clock=lambda: now)
+        await service.create_alliance(Platform.TELEGRAM, user_id, "Downgrade Union", "start")
+        mining = await service.start_mining(Platform.TELEGRAM, user_id, "mine")
+        await store.complete_due_actions(now + timedelta(minutes=1), limit=10)
+        training = await service.start_training(Platform.TELEGRAM, user_id, "train")
+        await store.complete_due_actions(now + timedelta(minutes=2), limit=10)
+        return mining.action_id, training.action_id
+    finally:
+        await database.close()
+
+
+async def downgraded_action_types(
+    mining_action_id: uuid.UUID, training_action_id: uuid.UUID
+) -> tuple[str | None, str | None, set[uuid.UUID]]:
+    if POSTGRES_URL is None:
+        raise RuntimeError("ASIM_TEST_POSTGRES_URL is required")
+    database = Database(POSTGRES_URL)
+    try:
+        async with database.engine.connect() as connection:
+            actions = await connection.execute(
+                sa.text(
+                    "SELECT id, action_type FROM timed_actions "
+                    "WHERE id IN (:mining_id, :training_id)"
+                ),
+                {"mining_id": mining_action_id, "training_id": training_action_id},
+            )
+            action_types = {row.id: row.action_type for row in actions}
+            notifications = await connection.execute(
+                sa.text(
+                    "SELECT source_action_id FROM notification_outbox "
+                    "WHERE source_action_id IN (:mining_id, :training_id)"
+                ),
+                {"mining_id": mining_action_id, "training_id": training_action_id},
+            )
+            return (
+                action_types.get(mining_action_id),
+                action_types.get(training_action_id),
+                {row.source_action_id for row in notifications},
+            )
+    finally:
+        await database.close()
+
+
+@pytest.mark.postgres
+def test_training_history_can_downgrade_to_mining_only_schema() -> None:
+    config = alembic_config()
+    mining_action_id, training_action_id = asyncio.run(create_mining_and_training_history())
+    try:
+        command.downgrade(config, "20260730_0002")
+        mining_type, training_type, notification_action_ids = asyncio.run(
+            downgraded_action_types(mining_action_id, training_action_id)
+        )
+        assert mining_type == "mining"
+        assert training_type is None
+        assert notification_action_ids == {mining_action_id}
+    finally:
+        command.upgrade(config, "head")
 
 
 @pytest.mark.postgres
