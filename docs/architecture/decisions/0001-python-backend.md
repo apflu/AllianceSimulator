@@ -11,7 +11,7 @@
 
 权威游戏后端使用 Python。Web 前端若出现，使用 TypeScript，并通过 OpenAPI 或显式 API schema 生成客户端类型，而不要求前后端共享实现语言。
 
-基线工具为 Python 3.14、uv、Pydantic、SQLAlchemy 2、Alembic、FastAPI、discord.py、aiogram、pytest、Hypothesis、Ruff 和 Pyright。
+基线工具为 Python 3.13+、uv、Pydantic、SQLAlchemy 2、Alembic、FastAPI、discord.py、aiogram、pytest、Hypothesis、Ruff 和 Pyright。
 
 ## 理由
 

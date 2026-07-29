@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-项目处于设计与奠基阶段，尚无可运行服务。已经确定：
+项目正在实施 M0 工程基础。已经确定：
 
 - 权威后端使用 Python；
 - PostgreSQL 是游戏状态的唯一事实来源；
@@ -24,3 +24,32 @@
 - [里程碑路线图](docs/milestones/README.md)
 
 下一项工作是完成 [M0：工程基础](docs/milestones/M0-foundation.md)。
+
+## 本地开发
+
+需要 Python 3.13+、uv 和 PostgreSQL。仓库提供的 `compose.yaml` 可用于启动本地数据库：
+
+```powershell
+docker compose up -d postgres
+Copy-Item .env.example .env
+uv sync
+uv run alembic upgrade head
+```
+
+启动 HTTP 健康检查和 Worker：
+
+```powershell
+uv run alliancesim-api
+uv run alliancesim-worker
+```
+
+运行全部本地质量检查：
+
+```powershell
+uv run ruff format --check .
+uv run ruff check .
+uv run pyright
+uv run pytest
+```
+
+密钥和本地 `.env` 不应提交。数据库连接默认读取 `ASIM_DATABASE_URL`。

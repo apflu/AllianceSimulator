@@ -60,7 +60,7 @@ docs/
 
 ## 推荐技术基线
 
-- Python 3.14；
+- Python 3.13 或更新的兼容版本；
 - `uv` 管理环境、锁文件和命令；
 - Pydantic 负责边界数据验证；
 - SQLAlchemy 2 和 Alembic 负责持久化；
