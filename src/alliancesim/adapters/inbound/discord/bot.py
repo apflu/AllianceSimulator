@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import re
 from collections.abc import Awaitable, Callable
+from typing import Any
 
 import discord
 from discord import app_commands
@@ -17,33 +19,45 @@ def discord_embed(view: MessageView) -> discord.Embed:
     return embed
 
 
-class EventButton(discord.ui.Button[discord.ui.View]):
-    def __init__(
-        self,
-        action: ViewAction,
-        handler: Callable[[discord.Interaction, str], Awaitable[None]],
-    ) -> None:
+class EventButton(
+    discord.ui.DynamicItem[discord.ui.Button[discord.ui.View]],
+    template=r"event:(?P<occurrence>[0-9a-fA-F-]{36}):(?P<option>[^:]{1,40})",
+):
+    def __init__(self, action: ViewAction) -> None:
         super().__init__(
-            style=discord.ButtonStyle.primary,
-            label=action.label,
-            custom_id=action.action_id,
+            discord.ui.Button(
+                style=discord.ButtonStyle.primary,
+                label=action.label,
+                custom_id=action.action_id,
+            )
         )
         self._action_id = action.action_id
-        self._handler = handler
+
+    @classmethod
+    async def from_custom_id(
+        cls,
+        interaction: discord.Interaction,
+        item: discord.ui.Item[Any],
+        match: re.Match[str],
+        /,
+    ) -> EventButton:
+        del interaction
+        if not isinstance(item, discord.ui.Button):
+            raise TypeError("event action must be a Discord button")
+        return cls(ViewAction(match.group(0), item.label or "选择"))
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        await self._handler(interaction, self._action_id)
+        client = interaction.client
+        if not isinstance(client, AllianceDiscordClient):
+            raise RuntimeError("event action was dispatched by an unexpected client")
+        await client.handle_event_action(interaction, self._action_id)
 
 
 class EventActionView(discord.ui.View):
-    def __init__(
-        self,
-        actions: tuple[ViewAction, ...],
-        handler: Callable[[discord.Interaction, str], Awaitable[None]],
-    ) -> None:
-        super().__init__(timeout=900)
+    def __init__(self, actions: tuple[ViewAction, ...]) -> None:
+        super().__init__(timeout=None)
         for action in actions:
-            self.add_item(EventButton(action, handler))
+            self.add_item(EventButton(action))
 
 
 class AllianceDiscordClient(discord.Client):
@@ -59,6 +73,7 @@ class AllianceDiscordClient(discord.Client):
         self._commands = commands
         self._guild = discord.Object(id=guild_id) if guild_id is not None else None
         self._on_close = on_close
+        self.add_dynamic_items(EventButton)
         self.tree.add_command(
             app_commands.Command(
                 name="start",
@@ -112,7 +127,7 @@ class AllianceDiscordClient(discord.Client):
 
     async def _respond(self, interaction: discord.Interaction, view: MessageView) -> None:
         if view.actions:
-            action_view = EventActionView(view.actions, self._handle_action)
+            action_view = EventActionView(view.actions)
             if interaction.response.is_done():
                 await interaction.followup.send(
                     embed=discord_embed(view), view=action_view, ephemeral=True
@@ -127,7 +142,7 @@ class AllianceDiscordClient(discord.Client):
             else:
                 await interaction.response.send_message(embed=discord_embed(view), ephemeral=True)
 
-    async def _handle_action(self, interaction: discord.Interaction, action_id: str) -> None:
+    async def handle_event_action(self, interaction: discord.Interaction, action_id: str) -> None:
         await interaction.response.defer(ephemeral=True)
         result = await self._commands.resolve_action(str(interaction.user.id), action_id)
         await self._respond(interaction, result)

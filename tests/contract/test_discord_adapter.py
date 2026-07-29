@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import uuid
 from datetime import UTC, datetime
 from typing import cast
@@ -9,6 +10,7 @@ import discord
 from alliancesim.adapters.inbound.discord.bot import (
     AllianceDiscordClient,
     EventActionView,
+    EventButton,
     discord_embed,
 )
 from alliancesim.application.chat_commands import ChatCommandAdapter
@@ -104,15 +106,24 @@ def test_discord_embed_preserves_platform_neutral_view() -> None:
 
 
 def test_discord_event_actions_become_component_buttons() -> None:
-    async def handler(_: discord.Interaction, action_id: str) -> None:
-        del action_id
-
-    view = EventActionView((ViewAction("event:1:take", "Take"),), handler)
+    action_id = "event:00000000-0000-0000-0000-000000000001:take"
+    view = EventActionView((ViewAction(action_id, "Take"),))
+    assert view.timeout is None
     assert len(view.children) == 1
-    button = view.children[0]
-    assert isinstance(button, discord.ui.Button)
-    assert button.custom_id == "event:1:take"
-    assert button.label == "Take"
+    dynamic = view.children[0]
+    assert isinstance(dynamic, EventButton)
+    assert dynamic.item.custom_id == action_id
+    assert dynamic.item.label == "Take"
+
+
+async def test_discord_event_button_can_be_reconstructed_after_restart() -> None:
+    action_id = "event:00000000-0000-0000-0000-000000000001:take"
+    item: discord.ui.Button[discord.ui.View] = discord.ui.Button(label="Take", custom_id=action_id)
+    match = re.fullmatch(EventButton.__discord_ui_compiled_template__, action_id)
+    assert match is not None
+    dynamic = await EventButton.from_custom_id(cast(discord.Interaction, object()), item, match)
+    assert dynamic.item.custom_id == action_id
+    assert dynamic.item.label == "Take"
 
 
 class StubStore:

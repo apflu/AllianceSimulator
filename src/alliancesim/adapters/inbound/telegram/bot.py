@@ -75,8 +75,8 @@ class AllianceTelegramRouter:
         if callback.data is None:
             await callback.answer("无效操作。", show_alert=True)
             return
-        view = await self._commands.resolve_action(str(callback.from_user.id), callback.data)
         await callback.answer()
+        view = await self._commands.resolve_action(str(callback.from_user.id), callback.data)
         if callback.bot is None:
             raise RuntimeError("Telegram callback has no Bot context")
         await callback.bot.send_message(

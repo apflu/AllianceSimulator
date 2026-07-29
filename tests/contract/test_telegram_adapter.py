@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import cast
 
 from aiogram.filters.command import CommandObject
-from aiogram.types import Message
+from aiogram.types import CallbackQuery, Message
 
 from alliancesim.adapters.inbound.telegram.bot import (
     AllianceTelegramRouter,
@@ -19,12 +19,20 @@ class UnusedCommands:
 
 
 class CapturingTelegramCommands:
-    def __init__(self) -> None:
+    def __init__(self, sequence: list[str] | None = None) -> None:
         self.start_call: tuple[str, str, str] | None = None
+        self._sequence = sequence
 
     async def start(self, user_id: str, name: str, interaction_id: str) -> MessageView:
         self.start_call = (user_id, name, interaction_id)
         return MessageView("Created", name)
+
+    async def resolve_action(self, user_id: str, action_id: str) -> MessageView:
+        assert user_id == "42"
+        assert action_id == "event:00000000-0000-0000-0000-000000000001:take"
+        if self._sequence is not None:
+            self._sequence.append("resolve")
+        return MessageView("Resolved", "Done")
 
 
 class FakeTelegramUser:
@@ -47,6 +55,28 @@ class FakeTelegramMessage:
         self.answers.append(text)
 
 
+class FakeTelegramBot:
+    def __init__(self, sequence: list[str]) -> None:
+        self._sequence = sequence
+
+    async def send_message(self, chat_id: int, text: str, **_: object) -> None:
+        assert chat_id == 42
+        assert text == "Resolved\n\nDone"
+        self._sequence.append("send")
+
+
+class FakeTelegramCallback:
+    data = "event:00000000-0000-0000-0000-000000000001:take"
+    from_user = FakeTelegramUser()
+
+    def __init__(self, sequence: list[str]) -> None:
+        self._sequence = sequence
+        self.bot = FakeTelegramBot(sequence)
+
+    async def answer(self, *_: object, **__: object) -> None:
+        self._sequence.append("answer")
+
+
 def test_telegram_router_registers_mvp_commands() -> None:
     commands = cast(ChatCommandAdapter, UnusedCommands())
     adapter = AllianceTelegramRouter(commands)
@@ -62,6 +92,15 @@ async def test_telegram_start_handler_uses_stable_message_identity() -> None:
     await adapter.start_command(cast(Message, fake), command)
     assert captured.start_call == ("42", "Handler Union", "700:11")
     assert fake.answers == ["Created\n\nHandler Union"]
+
+
+async def test_telegram_callback_is_acknowledged_before_processing() -> None:
+    sequence: list[str] = []
+    captured = CapturingTelegramCommands(sequence)
+    adapter = AllianceTelegramRouter(cast(ChatCommandAdapter, captured))
+    callback = FakeTelegramCallback(sequence)
+    await adapter.action_callback(cast(CallbackQuery, callback))
+    assert sequence == ["answer", "resolve", "send"]
 
 
 def test_telegram_text_preserves_platform_neutral_view() -> None:
