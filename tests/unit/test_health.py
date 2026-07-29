@@ -23,6 +23,16 @@ async def test_liveness_does_not_depend_on_database() -> None:
     assert response.json()["status"] == "ok"
 
 
+async def test_request_id_is_preserved_or_generated() -> None:
+    app = create_app(FakeDatabase(ready=True))
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        preserved = await client.get("/health/live", headers={"x-request-id": "request-123"})
+        generated = await client.get("/health/live")
+    assert preserved.headers["x-request-id"] == "request-123"
+    assert generated.headers["x-request-id"]
+    assert generated.headers["x-request-id"] != "request-123"
+
+
 async def test_readiness_reports_database_failure() -> None:
     app = create_app(FakeDatabase(ready=False))
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:

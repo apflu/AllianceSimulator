@@ -44,6 +44,7 @@ packages = ["src/alliancesim"]
 addopts = "-ra --strict-config --strict-markers"
 asyncio_mode = "auto"
 testpaths = ["tests"]
+markers = ["postgres: requires a real PostgreSQL database"]
 
 [tool.ruff]
 line-length = 100
