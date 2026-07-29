@@ -34,11 +34,64 @@ class UnusedCommands:
     """The command tree only needs the adapter type during registration."""
 
 
+class CapturingDiscordCommands:
+    def __init__(self) -> None:
+        self.start_call: tuple[str, str, str] | None = None
+
+    async def start(self, user_id: str, name: str, interaction_id: str) -> MessageView:
+        self.start_call = (user_id, name, interaction_id)
+        return MessageView("Created", name)
+
+
+class FakeDiscordResponse:
+    def __init__(self) -> None:
+        self.deferred = False
+
+    async def defer(self, *, ephemeral: bool = False) -> None:
+        assert ephemeral is True
+        self.deferred = True
+
+    def is_done(self) -> bool:
+        return self.deferred
+
+
+class FakeDiscordFollowup:
+    def __init__(self) -> None:
+        self.embeds: list[discord.Embed] = []
+
+    async def send(self, *, embed: discord.Embed, ephemeral: bool, **_: object) -> None:
+        assert ephemeral is True
+        self.embeds.append(embed)
+
+
+class FakeDiscordUser:
+    id = 42
+
+
+class FakeDiscordInteraction:
+    id = 9001
+    user = FakeDiscordUser()
+
+    def __init__(self) -> None:
+        self.response = FakeDiscordResponse()
+        self.followup = FakeDiscordFollowup()
+
+
 def test_discord_client_registers_mvp_slash_commands() -> None:
     commands = cast(ChatCommandAdapter, UnusedCommands())
     client = AllianceDiscordClient(commands, guild_id=123)
     names = {command.name for command in client.tree.get_commands(guild=discord.Object(id=123))}
     assert names == {"start", "status", "mine", "train", "events"}
+
+
+async def test_discord_start_handler_defers_and_uses_followup() -> None:
+    captured = CapturingDiscordCommands()
+    client = AllianceDiscordClient(cast(ChatCommandAdapter, captured), guild_id=123)
+    fake = FakeDiscordInteraction()
+    await client.start_command(cast(discord.Interaction, fake), "Handler Union")
+    assert fake.response.deferred is True
+    assert captured.start_call == ("42", "Handler Union", "9001")
+    assert fake.followup.embeds[0].title == "Created"
 
 
 def test_discord_embed_preserves_platform_neutral_view() -> None:
