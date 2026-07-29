@@ -24,10 +24,12 @@
 - [M1：Discord 采矿纵向切片](milestones/M1-discord-mining-slice.md)
 - [M2：Telegram 功能对等](milestones/M2-telegram-parity.md)
 - [M3：事件与长期成长](milestones/M3-events-and-progression.md)
+- [MVP 验证报告](milestones/verification.md)
 
 ## 开发
 
 - [开发与提交工作流](development/workflow.md)：小目标、提交边界、检查和远端操作约定。
+- [平台冒烟测试](development/platform-smoke-test.md)：Discord 与 Telegram 的最终外部验收步骤。
 
 ## 参考
 

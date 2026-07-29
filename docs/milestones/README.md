@@ -4,10 +4,10 @@
 
 | 里程碑 | 结果 | 状态 |
 |---|---|---|
-| [M0：工程基础](M0-foundation.md) | Python 工程、数据库迁移、质量门槛和最小运行入口 | 待开始 |
-| [M1：Discord 采矿纵向切片](M1-discord-mining-slice.md) | 新玩家可完成第一次持久化采矿 | 待开始 |
-| [M2：Telegram 功能对等](M2-telegram-parity.md) | 同一核心由 Telegram 完成等价流程 | 待开始 |
-| [M3：事件与长期成长](M3-events-and-progression.md) | 玩家处理事件，角色进行技能成长 | 待开始 |
+| [M0：工程基础](M0-foundation.md) | Python 工程、数据库迁移、质量门槛和最小运行入口 | 完成 |
+| [M1：Discord 采矿纵向切片](M1-discord-mining-slice.md) | 新玩家可完成第一次持久化采矿 | 自动验证完成，待平台冒烟 |
+| [M2：Telegram 功能对等](M2-telegram-parity.md) | 同一核心由 Telegram 完成等价流程 | 自动验证完成，待平台冒烟 |
+| [M3：事件与长期成长](M3-events-and-progression.md) | 玩家处理事件，角色进行技能成长 | 自动验证完成，待平台冒烟 |
 | M4：探索、舰船与内容扩展 | 引入地点选择、舰船差异和数据驱动内容版本 | 未细化 |
 | M5：Web 只读入口 | 使用稳定 API 查看联盟、行动和事件 | 未细化 |
 
@@ -23,3 +23,5 @@
 - 相关文档与实现同步。
 
 在 M1 验证玩法闭环之前，不细化 M4/M5，避免过早设计完整 EVE 系统。
+
+当前证据和剩余验收项见 [MVP 验证报告](verification.md)。
