@@ -138,7 +138,8 @@ async def test_training_persists_and_increases_future_mining_yield(tmp_path: Pat
     current_time = [NOW]
     mining_rules = MiningRules(duration=timedelta(minutes=1), base_yield=100)
     skill_rules = SkillRules("mining-operations", timedelta(minutes=2), 5, 1_000)
-    async with game_database(tmp_path / "training.sqlite3") as (_, store):
+    path = tmp_path / "training.sqlite3"
+    async with game_database(path) as (_, store):
         service = GameService(
             store,
             clock=lambda: current_time[0],
@@ -152,14 +153,23 @@ async def test_training_persists_and_increases_future_mining_yield(tmp_path: Pat
         assert duplicate.action_id == training.action_id
         assert duplicate.created is False
 
+    async with game_database(path) as (_, store):
+        restarted_service = GameService(
+            store,
+            clock=lambda: current_time[0],
+            mining_rules=mining_rules,
+            skill_rules=skill_rules,
+        )
         current_time[0] = NOW + timedelta(minutes=2)
         assert (await store.complete_due_actions(current_time[0], limit=10)).count == 1
-        status = await service.get_status(Platform.DISCORD, "trainee")
+        status = await restarted_service.get_status(Platform.DISCORD, "trainee")
         assert [(skill.skill_id, skill.level) for skill in status.skills] == [
             ("mining-operations", 1)
         ]
 
-        mining = await service.start_mining(Platform.DISCORD, "trainee", "mine-after-training")
+        mining = await restarted_service.start_mining(
+            Platform.DISCORD, "trainee", "mine-after-training"
+        )
         assert mining.yield_quantity == 110
 
 

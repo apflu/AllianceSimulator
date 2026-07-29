@@ -18,7 +18,11 @@ def main() -> None:
     database = Database(settings.database_url)
     store = SqlAlchemyGameStore(database.sessions)
     commands = ChatCommandAdapter(GameService(store), Platform.DISCORD)
-    client = AllianceDiscordClient(commands, guild_id=settings.discord_guild_id)
+    client = AllianceDiscordClient(
+        commands,
+        guild_id=settings.discord_guild_id,
+        on_close=database.close,
+    )
     client.run(settings.discord_token.get_secret_value(), log_handler=None)
 
 

@@ -47,11 +47,18 @@ class EventActionView(discord.ui.View):
 
 
 class AllianceDiscordClient(discord.Client):
-    def __init__(self, commands: ChatCommandAdapter, *, guild_id: int | None = None) -> None:
+    def __init__(
+        self,
+        commands: ChatCommandAdapter,
+        *,
+        guild_id: int | None = None,
+        on_close: Callable[[], Awaitable[None]] | None = None,
+    ) -> None:
         super().__init__(intents=discord.Intents.none())
         self.tree = app_commands.CommandTree(self)
         self._commands = commands
         self._guild = discord.Object(id=guild_id) if guild_id is not None else None
+        self._on_close = on_close
         self.tree.add_command(
             app_commands.Command(
                 name="start",
@@ -95,6 +102,13 @@ class AllianceDiscordClient(discord.Client):
 
     async def setup_hook(self) -> None:
         await self.tree.sync(guild=self._guild)
+
+    async def close(self) -> None:
+        try:
+            await super().close()
+        finally:
+            if self._on_close is not None:
+                await self._on_close()
 
     async def _respond(self, interaction: discord.Interaction, view: MessageView) -> None:
         if view.actions:

@@ -13,6 +13,7 @@ class Settings(BaseSettings):
         env_prefix="ASIM_",
         extra="ignore",
         case_sensitive=False,
+        env_ignore_empty=True,
     )
 
     environment: Literal["development", "test", "production"] = "development"
