@@ -23,6 +23,10 @@
 - [M2：Telegram 功能对等](milestones/M2-telegram-parity.md)
 - [M3：事件与长期成长](milestones/M3-events-and-progression.md)
 
+## 开发
+
+- [开发与提交工作流](development/workflow.md)：小目标、提交边界、检查和远端操作约定。
+
 ## 参考
 
 - [旧项目检查结论](reference/legacy-system-findings.md)
@@ -33,3 +37,4 @@
 - 架构方向变化：新增 ADR；不要覆写旧决策的历史背景。
 - 领域名称变化：更新领域模型、接口和测试用例中的统一语言。
 - 里程碑只有在所有验收条件满足后才能标记完成。
+- 完成小而完整的分支目标或到达自然检查点时，按开发工作流主动提交。
