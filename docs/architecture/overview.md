@@ -2,12 +2,16 @@
 
 ## 架构风格
 
-项目采用模块化单体和端口—适配器架构。MVP 可以部署为两个进程，但共享同一代码库和 PostgreSQL：
+项目采用模块化单体和端口—适配器架构。MVP 的入口与后台任务作为可独立启动的进程运行，
+但共享同一代码库和 PostgreSQL：
 
-- **应用进程**：接收 Discord、Telegram 和未来 HTTP 请求；
+- **API 进程**：提供存活、就绪检查和未来 HTTP 接口；
+- **Discord 进程**：接收 slash command 与 component interaction；
+- **Telegram 进程**：接收 command 与 inline keyboard callback；
 - **Worker 进程**：认领到期行动、执行结算并发送通知。
 
-初期不拆微服务。清晰的模块边界用于控制耦合，而不是增加网络调用。
+这些进程可以部署在同一主机上，入口之间不通过网络互调。初期不拆微服务；清晰的模块边界
+用于控制耦合，而不是增加网络调用。
 
 ```mermaid
 flowchart LR
@@ -93,7 +97,8 @@ MVP 不引入 Redis 或 Celery。只有在 PostgreSQL 方案经过测量成为�
 ## 运行与可观测性
 
 - 配置来自环境变量，密钥不进入仓库。
-- 日志采用结构化输出并携带 `request_id`、`player_id`、`action_id`。
+- 日志采用结构化输出；平台请求携带 `request_id`，后台结算和通知分别携带
+  `action_id`、`outbox_id`。存在内部玩家上下文时使用 `player_id`，不使用显示名作为关联键。
 - 至少提供存活和就绪检查。
 - Worker 记录任务延迟、成功、重试和最终失败。
 - 数据库迁移必须可在部署时单独执行。

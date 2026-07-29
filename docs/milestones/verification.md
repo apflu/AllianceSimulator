@@ -11,7 +11,7 @@
 - `ruff format --check`：通过；
 - `ruff check`：通过；
 - `pyright` 严格模式：0 错误、0 警告；
-- 无外部平台和 PostgreSQL 时：37 项测试通过，2 项 PostgreSQL 专属测试按条件跳过；
+- 无外部平台和 PostgreSQL 时：45 项测试通过，2 项 PostgreSQL 专属测试按条件跳过；
 - API 进程实际启动，`/health/live` 返回 HTTP 200 和 `x-request-id`。
 
 ### 真实 PostgreSQL 17.9
@@ -49,6 +49,43 @@
 - Discord 与 Telegram 调用同一应用用例并产生等价领域状态；
 - `domain` 不导入 FastAPI、SQLAlchemy、discord.py 或 aiogram。
 
+### 可靠性与平台边界
+
+- Discord slash command 在访问数据库前确认 interaction，避免超过平台响应时限；
+- Discord 事件按钮使用动态持久化组件，Bot 重启后仍可根据稳定 `custom_id` 重建路由；
+- Telegram callback 在处理领域命令前先向平台确认；
+- Discord 与 Telegram 命令均绑定结构化 `request_id`、平台和命令结果；
+- 平台 API 错误在持久化前脱敏，Telegram URL 中的 token 不会进入错误字段或日志；
+- 通知采用指数退避，连续 10 次失败后进入可审计的 `failed` 终态；
+- Worker 单次轮询失败后继续运行，并记录行动完成、通知成功、重试与最终失败。
+
+## MVP 范围逐项审计
+
+| 文档要求 | 权威证据 | 结论 |
+|---|---|---|
+| 平台身份映射到内部玩家 | `20260730_0001_identity.py` 的唯一身份约束；`test_full_mining_lifecycle_is_idempotent_and_persistent` | 通过 |
+| 幂等创建联盟 | 同一平台身份重复创建返回既有联盟；集成测试覆盖 | 通过 |
+| 初始角色、舰船和采矿模块 | `create_alliance` 同事务创建成员与 Pioneer；完整旅程验证可直接采矿 | 通过 |
+| 状态与库存查询 | `get_status` 与 `/status` 展示模型；完整旅程验证空库存和结算后库存 | 通过 |
+| 固定地点和材料 | 稳定内容 ID `calm-asteroid-belt`、`raw-ore`；行动冻结地点、材料和规则版本 | 通过 |
+| 采矿开始、到期结算和查询 | 领域规划、持久化行动、Worker 结算及端到端旅程 | 通过 |
+| 重启后结算逾期行动 | 关闭并重建数据库适配器后的结算与状态测试 | 通过 |
+| 事务性通知发件箱和安全重试 | 行动与 outbox 同事务；租约认领、退避、终止状态及发送器测试 | 通过 |
+| Discord 入口 | 五个 slash command、component、handler 与渲染契约测试 | 自动验证通过；真实平台待验收 |
+| Telegram 对等入口 | 五个 command、inline keyboard、callback、通知与对等状态测试 | 自动验证通过；真实平台待验收 |
+| 联盟事件及明确结果 | 唯一触发、内容快照、幂等选项、24 小时默认结果测试 | 通过 |
+| 单元、集成和适配器契约测试 | 45 项本地测试及 2 项 PostgreSQL 专属测试 | 通过 |
+
+### MVP 指标审计
+
+| 指标 | 证据 | 结论 |
+|---|---|---|
+| 重复平台交互不重复发放资源 | 行动唯一幂等键、事件解析幂等测试 | 通过 |
+| 停服重启后最终且仅结算一次 | 重启集成测试与真实 PostgreSQL 双 Worker 测试 | 通过 |
+| 两个平台产生等价领域结果 | 平台对等集成测试与共用 `GameService`/`ChatCommandAdapter` | 自动验证通过；真实平台待验收 |
+| 核心测试无需平台 API | 全量本地测试使用 fake/mock sender 和平台对象 | 通过 |
+| 首次采矿无需修改数据库 | `test_player_completes_mvp_journey_without_database_edits` | 通过 |
+
 ## 尚缺的外部验证
 
 自动化测试不能证明真实 Bot token、平台权限、命令同步和私信策略均已正确配置。以下两项仍需在测试环境执行：
@@ -57,3 +94,7 @@
 - Telegram 私聊完成同一流程，并验证 inline keyboard 回调和主动通知。
 
 执行步骤见[平台冒烟测试](../development/platform-smoke-test.md)。完成并记录结果后，才能把 MVP 状态改为“全部验收完成”。
+
+本地配置审计（2026-07-30）确认 `ASIM_DISCORD_TOKEN`、`ASIM_TELEGRAM_TOKEN` 和
+`ASIM_DISCORD_GUILD_ID` 均未配置，因此当前不能代替用户执行真实平台步骤。此结论只记录配置
+是否存在，不读取或记录任何 token 值。

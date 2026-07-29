@@ -23,7 +23,9 @@ MVP 功能实现与自动化验证已经完成，等待真实 Discord 和 Telegr
 - [领域模型](docs/architecture/domain-model.md)
 - [里程碑路线图](docs/milestones/README.md)
 
-下一项工作是完成 [M0：工程基础](docs/milestones/M0-foundation.md)。
+下一项工作是按[平台冒烟测试](docs/development/platform-smoke-test.md)在真实 Discord
+测试服务器和 Telegram 私聊中完成最终验收；自动化范围与现有证据见
+[MVP 验证报告](docs/milestones/verification.md)。
 
 ## 本地开发
 
