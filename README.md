@@ -57,3 +57,11 @@ uv run pytest
 密钥和本地 `.env` 不应提交。数据库连接默认读取 `ASIM_DATABASE_URL`。
 Discord Bot 需要 `ASIM_DISCORD_TOKEN`；开发时可以设置 `ASIM_DISCORD_GUILD_ID`，以便命令立即同步到测试服务器。
 Telegram Bot 需要 `ASIM_TELEGRAM_TOKEN`。
+
+两个聊天平台提供相同的玩家命令：
+
+- `/start <联盟名称>`：建立联盟；
+- `/status`：查看成员、舰船、库存、技能和当前行动；
+- `/mine`：开始采矿；
+- `/train`：训练采矿技能；
+- `/events`：查看并处理联盟事件。

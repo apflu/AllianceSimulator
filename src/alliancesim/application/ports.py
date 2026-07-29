@@ -9,9 +9,12 @@ from alliancesim.application.models import (
     AllianceStatus,
     CompletionBatch,
     CreateAllianceRequest,
+    EventResolved,
     MiningStarted,
+    PendingEvent,
     PendingNotification,
     PlatformRef,
+    ResolveEventRequest,
     StartMiningRequest,
     StartTrainingRequest,
     TrainingStarted,
@@ -36,6 +39,12 @@ class GameStore(Protocol):
     async def get_skill_level(self, identity: PlatformRef, skill_id: str) -> int: ...
 
     async def start_training(self, request: StartTrainingRequest) -> TrainingStarted: ...
+
+    async def list_pending_events(self, identity: PlatformRef) -> tuple[PendingEvent, ...]: ...
+
+    async def resolve_event(self, request: ResolveEventRequest, now: datetime) -> EventResolved: ...
+
+    async def expire_due_events(self, now: datetime, *, limit: int) -> int: ...
 
     async def complete_due_actions(self, now: datetime, *, limit: int) -> CompletionBatch: ...
 

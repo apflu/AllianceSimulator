@@ -14,27 +14,34 @@ from alliancesim.application.models import (
     AllianceStatus,
     CompletionBatch,
     CreateAllianceRequest,
+    EventOption,
+    EventResolved,
     InventoryItem,
     MiningStarted,
+    PendingEvent,
     PendingNotification,
     PlatformRef,
+    ResolveEventRequest,
     SkillLevel,
     StartMiningRequest,
     StartTrainingRequest,
     TrainingStarted,
 )
 from alliancesim.domain.content import (
+    ORE_DISCOVERY_EVENT,
     STARTER_CHARACTER_NAME,
     STARTER_MINING_MODULE_ID,
     STARTER_SHIP_NAME,
     STARTER_SHIP_TYPE_ID,
 )
+from alliancesim.domain.events import EventOptionDefinition, event_template_from_snapshot
 from alliancesim.domain.identity import Platform
 
 from .models import (
     AllianceRow,
     CharacterRow,
     CharacterSkillRow,
+    EventOccurrenceRow,
     InventoryItemRow,
     NotificationOutboxRow,
     PlatformIdentityRow,
@@ -384,6 +391,26 @@ class SqlAlchemyGameStore:
                         "material_id": action.material_id,
                         "quantity": action.yield_quantity,
                     }
+                    existing_event = await session.scalar(
+                        select(EventOccurrenceRow.id).where(
+                            EventOccurrenceRow.alliance_id == action.alliance_id,
+                            EventOccurrenceRow.template_id == ORE_DISCOVERY_EVENT.template_id,
+                        )
+                    )
+                    if existing_event is None:
+                        occurrence = EventOccurrenceRow(
+                            alliance_id=action.alliance_id,
+                            source_action_id=action.id,
+                            template_id=ORE_DISCOVERY_EVENT.template_id,
+                            template_version=ORE_DISCOVERY_EVENT.version,
+                            content_snapshot=ORE_DISCOVERY_EVENT.snapshot(),
+                            status="pending",
+                            triggered_at=now,
+                            expires_at=now + ORE_DISCOVERY_EVENT.timeout,
+                        )
+                        session.add(occurrence)
+                        await session.flush()
+                        payload["event_occurrence_id"] = str(occurrence.id)
                 elif action.action_type == "skill_training":
                     if action.skill_id is None or action.target_level is None:
                         raise ValueError("training action has incomplete result data")
@@ -423,6 +450,131 @@ class SqlAlchemyGameStore:
                 )
                 completed.append(action.id)
         return CompletionBatch(tuple(completed))
+
+    @staticmethod
+    def _pending_event(row: EventOccurrenceRow) -> PendingEvent:
+        template = event_template_from_snapshot(dict(row.content_snapshot))
+        return PendingEvent(
+            occurrence_id=row.id,
+            template_id=row.template_id,
+            template_version=row.template_version,
+            title=template.title,
+            body=template.body,
+            expires_at=_aware_utc(row.expires_at),
+            options=tuple(
+                EventOption(option.option_id, option.label) for option in template.options
+            ),
+        )
+
+    async def list_pending_events(self, identity: PlatformRef) -> tuple[PendingEvent, ...]:
+        async with self._sessions() as session:
+            alliance = await self._alliance_for_identity(session, identity)
+            if alliance is None:
+                raise NotFoundError("create an alliance first")
+            rows = (
+                await session.scalars(
+                    select(EventOccurrenceRow)
+                    .where(
+                        EventOccurrenceRow.alliance_id == alliance.id,
+                        EventOccurrenceRow.status == "pending",
+                    )
+                    .order_by(EventOccurrenceRow.triggered_at, EventOccurrenceRow.id)
+                )
+            ).all()
+            return tuple(self._pending_event(row) for row in rows)
+
+    @staticmethod
+    async def _apply_event_effect(
+        session: AsyncSession,
+        alliance_id: uuid.UUID,
+        option: EventOptionDefinition,
+    ) -> None:
+        inventory = await session.scalar(
+            select(InventoryItemRow)
+            .where(
+                InventoryItemRow.alliance_id == alliance_id,
+                InventoryItemRow.material_id == option.effect.material_id,
+            )
+            .with_for_update()
+        )
+        if inventory is None:
+            inventory = InventoryItemRow(
+                alliance_id=alliance_id,
+                material_id=option.effect.material_id,
+                quantity=0,
+            )
+            session.add(inventory)
+        inventory.quantity += option.effect.quantity
+
+    async def resolve_event(self, request: ResolveEventRequest, now: datetime) -> EventResolved:
+        async with self._sessions() as session, session.begin():
+            alliance = await self._alliance_for_identity(session, request.identity)
+            if alliance is None:
+                raise NotFoundError("create an alliance first")
+            row = await session.scalar(
+                select(EventOccurrenceRow)
+                .where(
+                    EventOccurrenceRow.id == request.occurrence_id,
+                    EventOccurrenceRow.alliance_id == alliance.id,
+                )
+                .with_for_update()
+            )
+            if row is None:
+                raise NotFoundError("event occurrence not found")
+            template = event_template_from_snapshot(dict(row.content_snapshot))
+            option = template.option(request.option_id)
+            if row.status != "pending":
+                if (
+                    row.resolution_idempotency_key == request.idempotency_key
+                    and row.selected_option_id == request.option_id
+                ):
+                    return EventResolved(
+                        row.id,
+                        option.option_id,
+                        option.effect.material_id,
+                        option.effect.quantity,
+                        applied=False,
+                    )
+                raise ConflictError("event is no longer pending")
+            if _aware_utc(row.expires_at) <= _aware_utc(now):
+                raise ConflictError("event has expired and awaits automatic resolution")
+            await self._apply_event_effect(session, alliance.id, option)
+            row.status = "resolved"
+            row.resolved_at = now
+            row.selected_option_id = option.option_id
+            row.resolution_idempotency_key = request.idempotency_key
+            return EventResolved(
+                row.id,
+                option.option_id,
+                option.effect.material_id,
+                option.effect.quantity,
+                applied=True,
+            )
+
+    async def expire_due_events(self, now: datetime, *, limit: int) -> int:
+        expired = 0
+        async with self._sessions() as session, session.begin():
+            rows = (
+                await session.scalars(
+                    select(EventOccurrenceRow)
+                    .where(
+                        EventOccurrenceRow.status == "pending",
+                        EventOccurrenceRow.expires_at <= now,
+                    )
+                    .order_by(EventOccurrenceRow.expires_at, EventOccurrenceRow.id)
+                    .limit(limit)
+                    .with_for_update(skip_locked=True)
+                )
+            ).all()
+            for row in rows:
+                template = event_template_from_snapshot(dict(row.content_snapshot))
+                option = template.option(template.default_option_id)
+                await self._apply_event_effect(session, row.alliance_id, option)
+                row.status = "expired"
+                row.resolved_at = now
+                row.selected_option_id = option.option_id
+                expired += 1
+        return expired
 
     async def claim_notifications(
         self, now: datetime, *, limit: int

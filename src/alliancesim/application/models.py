@@ -111,3 +111,37 @@ class CompletionBatch:
     @property
     def count(self) -> int:
         return len(self.completed_action_ids)
+
+
+@dataclass(frozen=True, slots=True)
+class EventOption:
+    option_id: str
+    label: str
+
+
+@dataclass(frozen=True, slots=True)
+class PendingEvent:
+    occurrence_id: uuid.UUID
+    template_id: str
+    template_version: int
+    title: str
+    body: str
+    expires_at: datetime
+    options: tuple[EventOption, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ResolveEventRequest:
+    identity: PlatformRef
+    occurrence_id: uuid.UUID
+    option_id: str
+    idempotency_key: str
+
+
+@dataclass(frozen=True, slots=True)
+class EventResolved:
+    occurrence_id: uuid.UUID
+    option_id: str
+    material_id: str
+    quantity: int
+    applied: bool

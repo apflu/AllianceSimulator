@@ -8,9 +8,12 @@ from alliancesim.application.models import (
     AllianceStatus,
     CompletionBatch,
     CreateAllianceRequest,
+    EventResolved,
     MiningStarted,
+    PendingEvent,
     PendingNotification,
     PlatformRef,
+    ResolveEventRequest,
     StartMiningRequest,
     StartTrainingRequest,
     TrainingStarted,
@@ -69,6 +72,16 @@ class WorkerStore:
 
     async def start_training(self, request: StartTrainingRequest) -> TrainingStarted:
         raise AssertionError(request)
+
+    async def list_pending_events(self, identity: PlatformRef) -> tuple[PendingEvent, ...]:
+        raise AssertionError(identity)
+
+    async def resolve_event(self, request: ResolveEventRequest, now: datetime) -> EventResolved:
+        raise AssertionError((request, now))
+
+    async def expire_due_events(self, now: datetime, *, limit: int) -> int:
+        del now, limit
+        return 0
 
 
 class Sender:

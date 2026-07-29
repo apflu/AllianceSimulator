@@ -26,6 +26,7 @@ def test_migrations_upgrade_downgrade_and_upgrade(tmp_path: Path) -> None:
         "inventory_items",
         "timed_actions",
         "notification_outbox",
+        "event_occurrences",
     } <= tables
 
     command.downgrade(config, "base")

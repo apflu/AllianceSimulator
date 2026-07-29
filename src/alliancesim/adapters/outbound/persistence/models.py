@@ -180,3 +180,29 @@ class NotificationOutboxRow(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+
+
+class EventOccurrenceRow(Base):
+    __tablename__ = "event_occurrences"
+    __table_args__ = (
+        UniqueConstraint(
+            "alliance_id", "template_id", name="uq_event_occurrences_alliance_template"
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    alliance_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("alliances.id"), nullable=False)
+    source_action_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("timed_actions.id"), nullable=False, unique=True
+    )
+    template_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    template_version: Mapped[int] = mapped_column(Integer, nullable=False)
+    content_snapshot: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False)
+    triggered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    selected_option_id: Mapped[str | None] = mapped_column(String(80))
+    resolution_idempotency_key: Mapped[str | None] = mapped_column(String(120))

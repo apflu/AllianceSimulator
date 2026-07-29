@@ -12,6 +12,7 @@
 
 - [总体架构](architecture/overview.md)：系统边界、模块和运行方式。
 - [领域模型](architecture/domain-model.md)：核心实体、命令和状态转换。
+- [内容定义与存档兼容](architecture/content-versioning.md)：稳定 ID、规则版本与事件快照。
 - [ADR-0001：Python 权威后端](architecture/decisions/0001-python-backend.md)
 - [ADR-0002：持久化的时间行动](architecture/decisions/0002-persistent-timed-actions.md)
 - [ADR-0003：平台适配器](architecture/decisions/0003-platform-adapters.md)

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import uuid
+
 from alliancesim.application.errors import ApplicationError
 from alliancesim.application.game_service import GameService
-from alliancesim.application.views import MessageView, ViewField
+from alliancesim.application.views import MessageView, ViewAction, ViewField
 from alliancesim.domain.identity import Platform
 
 
@@ -81,4 +83,46 @@ class ChatCommandAdapter:
             prefix,
             f"正在训练 {result.skill_id} 到 {result.target_level} 级。",
             (ViewField("预计完成", result.finishes_at.isoformat()),),
+        )
+
+    async def events(self, user_id: str) -> MessageView:
+        try:
+            events = await self._service.list_pending_events(self._platform, user_id)
+        except ApplicationError as error:
+            return MessageView("无法读取事件", str(error), is_error=True)
+        if not events:
+            return MessageView("联盟事件", "目前没有待处理事件。")
+        event = events[0]
+        return MessageView(
+            event.title,
+            event.body,
+            (ViewField("失效时间", event.expires_at.isoformat()),),
+            tuple(
+                ViewAction(
+                    action_id=f"event:{event.occurrence_id}:{option.option_id}",
+                    label=option.label,
+                )
+                for option in event.options
+            ),
+        )
+
+    async def resolve_action(self, user_id: str, action_id: str) -> MessageView:
+        parts = action_id.split(":", maxsplit=2)
+        if len(parts) != 3 or parts[0] != "event":
+            return MessageView("无效操作", "无法识别这个操作。", is_error=True)
+        try:
+            occurrence_id = uuid.UUID(parts[1])
+            result = await self._service.resolve_event(
+                self._platform,
+                user_id,
+                occurrence_id,
+                parts[2],
+                action_id,
+            )
+        except (ApplicationError, ValueError) as error:
+            return MessageView("无法处理事件", str(error), is_error=True)
+        verb = "获得" if result.applied else "已经获得"
+        return MessageView(
+            "事件已处理",
+            f"联盟{verb} {result.quantity} {result.material_id}。",
         )

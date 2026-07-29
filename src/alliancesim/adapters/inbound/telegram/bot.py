@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from aiogram import Router
+from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.filters.command import CommandObject
-from aiogram.types import Message
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from alliancesim.application.chat_commands import ChatCommandAdapter
 from alliancesim.application.views import MessageView
@@ -15,6 +15,17 @@ def telegram_text(view: MessageView) -> str:
     return "\n\n".join(section for section in sections if section)
 
 
+def telegram_markup(view: MessageView) -> InlineKeyboardMarkup | None:
+    if not view.actions:
+        return None
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=action.label, callback_data=action.action_id)]
+            for action in view.actions
+        ]
+    )
+
+
 class AllianceTelegramRouter:
     def __init__(self, commands: ChatCommandAdapter) -> None:
         self._commands = commands
@@ -23,6 +34,8 @@ class AllianceTelegramRouter:
         self.router.message.register(self.status_command, Command("status"))
         self.router.message.register(self.mine_command, Command("mine"))
         self.router.message.register(self.train_command, Command("train"))
+        self.router.message.register(self.events_command, Command("events"))
+        self.router.callback_query.register(self.action_callback, F.data.startswith("event:"))
 
     @staticmethod
     def _user_id(message: Message) -> str:
@@ -53,3 +66,21 @@ class AllianceTelegramRouter:
     async def train_command(self, message: Message) -> None:
         view = await self._commands.train(self._user_id(message), self._interaction_id(message))
         await message.answer(telegram_text(view))
+
+    async def events_command(self, message: Message) -> None:
+        view = await self._commands.events(self._user_id(message))
+        await message.answer(telegram_text(view), reply_markup=telegram_markup(view))
+
+    async def action_callback(self, callback: CallbackQuery) -> None:
+        if callback.data is None:
+            await callback.answer("无效操作。", show_alert=True)
+            return
+        view = await self._commands.resolve_action(str(callback.from_user.id), callback.data)
+        await callback.answer()
+        if callback.bot is None:
+            raise RuntimeError("Telegram callback has no Bot context")
+        await callback.bot.send_message(
+            callback.from_user.id,
+            telegram_text(view),
+            reply_markup=telegram_markup(view),
+        )

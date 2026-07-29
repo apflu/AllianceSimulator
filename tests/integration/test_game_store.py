@@ -161,3 +161,73 @@ async def test_training_persists_and_increases_future_mining_yield(tmp_path: Pat
 
         mining = await service.start_mining(Platform.DISCORD, "trainee", "mine-after-training")
         assert mining.yield_quantity == 110
+
+
+async def test_mining_triggers_resolvable_idempotent_event(tmp_path: Path) -> None:
+    rules = MiningRules(duration=timedelta(seconds=1), base_yield=100)
+    current_time = [NOW]
+    async with game_database(tmp_path / "event.sqlite3") as (_, store):
+        service = GameService(store, clock=lambda: current_time[0], mining_rules=rules)
+        await service.create_alliance(Platform.DISCORD, "event-user", "Event Union", "start")
+        await service.start_mining(Platform.DISCORD, "event-user", "mine")
+        current_time[0] = NOW + timedelta(seconds=1)
+        await store.complete_due_actions(current_time[0], limit=10)
+
+        events = await service.list_pending_events(Platform.DISCORD, "event-user")
+        assert len(events) == 1
+        assert events[0].template_id == "ore-discovery"
+        assert {option.option_id for option in events[0].options} == {"refine", "analyze"}
+
+        action_id = f"event:{events[0].occurrence_id}:analyze"
+        resolved = await service.resolve_event(
+            Platform.DISCORD,
+            "event-user",
+            events[0].occurrence_id,
+            "analyze",
+            action_id,
+        )
+        duplicate = await service.resolve_event(
+            Platform.DISCORD,
+            "event-user",
+            events[0].occurrence_id,
+            "analyze",
+            action_id,
+        )
+        assert resolved.applied is True
+        assert duplicate.applied is False
+        assert await service.list_pending_events(Platform.DISCORD, "event-user") == ()
+        status = await service.get_status(Platform.DISCORD, "event-user")
+        assert [(item.material_id, item.quantity) for item in status.inventory] == [
+            ("raw-ore", 100),
+            ("research-data", 1),
+        ]
+
+        with pytest.raises(ConflictError, match="no longer pending"):
+            await service.resolve_event(
+                Platform.DISCORD,
+                "event-user",
+                events[0].occurrence_id,
+                "refine",
+                f"event:{events[0].occurrence_id}:refine",
+            )
+
+
+async def test_event_timeout_applies_default_result_once(tmp_path: Path) -> None:
+    rules = MiningRules(duration=timedelta(seconds=1), base_yield=100)
+    current_time = [NOW]
+    async with game_database(tmp_path / "event-timeout.sqlite3") as (_, store):
+        service = GameService(store, clock=lambda: current_time[0], mining_rules=rules)
+        await service.create_alliance(Platform.TELEGRAM, "timeout-user", "Timeout Union", "start")
+        await service.start_mining(Platform.TELEGRAM, "timeout-user", "mine")
+        current_time[0] = NOW + timedelta(seconds=1)
+        await store.complete_due_actions(current_time[0], limit=10)
+        assert len(await service.list_pending_events(Platform.TELEGRAM, "timeout-user")) == 1
+
+        current_time[0] += timedelta(hours=24)
+        assert await store.expire_due_events(current_time[0], limit=10) == 1
+        assert await store.expire_due_events(current_time[0], limit=10) == 0
+        assert await service.list_pending_events(Platform.TELEGRAM, "timeout-user") == ()
+        status = await service.get_status(Platform.TELEGRAM, "timeout-user")
+        assert [(item.material_id, item.quantity) for item in status.inventory] == [
+            ("raw-ore", 150)
+        ]

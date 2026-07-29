@@ -41,6 +41,7 @@ class ActionWorkerPoller:
     async def poll_once(self) -> int:
         now = self._clock()
         completions = await self._store.complete_due_actions(now, limit=self._batch_size)
+        expired_events = await self._store.expire_due_events(now, limit=self._batch_size)
         notifications = await self._store.claim_notifications(now, limit=self._batch_size)
         for notification in notifications:
             try:
@@ -51,4 +52,4 @@ class ActionWorkerPoller:
                 )
             else:
                 await self._store.mark_notification_sent(notification.outbox_id, now)
-        return completions.count + len(notifications)
+        return completions.count + expired_events + len(notifications)

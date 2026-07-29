@@ -11,10 +11,17 @@ class ViewField:
 
 
 @dataclass(frozen=True, slots=True)
+class ViewAction:
+    action_id: str
+    label: str
+
+
+@dataclass(frozen=True, slots=True)
 class MessageView:
     title: str
     body: str
     fields: tuple[ViewField, ...] = ()
+    actions: tuple[ViewAction, ...] = ()
     is_error: bool = False
 
     def as_plain_text(self) -> str:

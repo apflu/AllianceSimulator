@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from collections.abc import Callable
 from datetime import UTC, datetime
 
@@ -7,8 +8,11 @@ from alliancesim.application.models import (
     AllianceCreated,
     AllianceStatus,
     CreateAllianceRequest,
+    EventResolved,
     MiningStarted,
+    PendingEvent,
     PlatformRef,
+    ResolveEventRequest,
     StartMiningRequest,
     StartTrainingRequest,
     TrainingStarted,
@@ -93,4 +97,27 @@ class GameService:
         plan = plan_training(self._clock(), current_level, self._skill_rules)
         return await self._store.start_training(
             StartTrainingRequest(identity=identity, idempotency_key=idempotency_key, plan=plan)
+        )
+
+    async def list_pending_events(
+        self, platform: Platform, platform_user_id: str
+    ) -> tuple[PendingEvent, ...]:
+        return await self._store.list_pending_events(PlatformRef(platform, platform_user_id))
+
+    async def resolve_event(
+        self,
+        platform: Platform,
+        platform_user_id: str,
+        occurrence_id: uuid.UUID,
+        option_id: str,
+        idempotency_key: str,
+    ) -> EventResolved:
+        return await self._store.resolve_event(
+            ResolveEventRequest(
+                identity=PlatformRef(platform, platform_user_id),
+                occurrence_id=occurrence_id,
+                option_id=option_id,
+                idempotency_key=idempotency_key,
+            ),
+            self._clock(),
         )
