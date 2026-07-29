@@ -16,7 +16,16 @@ def test_migrations_upgrade_downgrade_and_upgrade(tmp_path: Path) -> None:
             row[0]
             for row in connection.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
         }
-    assert {"players", "platform_identities", "alliances"} <= tables
+    assert {
+        "players",
+        "platform_identities",
+        "alliances",
+        "characters",
+        "ships",
+        "inventory_items",
+        "timed_actions",
+        "notification_outbox",
+    } <= tables
 
     command.downgrade(config, "base")
     command.upgrade(config, "head")
