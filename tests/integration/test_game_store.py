@@ -65,12 +65,15 @@ async def test_full_mining_lifecycle_is_idempotent_and_persistent(tmp_path: Path
             await service.start_mining(Platform.DISCORD, "player-1", "interaction-mine-2")
 
         assert (await store.complete_due_actions(NOW, limit=10)).count == 0
-        batch = await store.complete_due_actions(NOW + timedelta(minutes=1), limit=10)
-        assert batch.completed_action_ids == (started.action_id,)
-        assert (await store.complete_due_actions(NOW + timedelta(minutes=2), limit=10)).count == 0
 
     async with game_database(path) as (_, restarted_store):
         restarted_service = GameService(restarted_store, clock=lambda: NOW, mining_rules=rules)
+        batch = await restarted_store.complete_due_actions(NOW + timedelta(minutes=1), limit=10)
+        assert batch.completed_action_ids == (started.action_id,)
+        assert (
+            await restarted_store.complete_due_actions(NOW + timedelta(minutes=2), limit=10)
+        ).count == 0
+
         status = await restarted_service.get_status(Platform.DISCORD, "player-1")
         assert status.active_action is None
         assert [(item.material_id, item.quantity) for item in status.inventory] == [
