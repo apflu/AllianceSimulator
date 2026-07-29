@@ -6,7 +6,11 @@ from typing import cast
 
 import discord
 
-from alliancesim.adapters.inbound.discord.bot import AllianceDiscordClient, discord_embed
+from alliancesim.adapters.inbound.discord.bot import (
+    AllianceDiscordClient,
+    EventActionView,
+    discord_embed,
+)
 from alliancesim.application.chat_commands import ChatCommandAdapter
 from alliancesim.application.models import (
     AllianceCreated,
@@ -23,7 +27,7 @@ from alliancesim.application.models import (
     StartTrainingRequest,
     TrainingStarted,
 )
-from alliancesim.application.views import MessageView, ViewField
+from alliancesim.application.views import MessageView, ViewAction, ViewField
 
 
 class UnusedCommands:
@@ -44,6 +48,18 @@ def test_discord_embed_preserves_platform_neutral_view() -> None:
     assert embed.description == "Ready"
     assert embed.fields[0].name == "Ore"
     assert embed.fields[0].value == "100"
+
+
+def test_discord_event_actions_become_component_buttons() -> None:
+    async def handler(_: discord.Interaction, action_id: str) -> None:
+        del action_id
+
+    view = EventActionView((ViewAction("event:1:take", "Take"),), handler)
+    assert len(view.children) == 1
+    button = view.children[0]
+    assert isinstance(button, discord.ui.Button)
+    assert button.custom_id == "event:1:take"
+    assert button.label == "Take"
 
 
 class StubStore:

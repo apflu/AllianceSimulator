@@ -112,34 +112,47 @@ class AllianceDiscordClient(discord.Client):
 
     async def _respond(self, interaction: discord.Interaction, view: MessageView) -> None:
         if view.actions:
-            await interaction.response.send_message(
-                embed=discord_embed(view),
-                view=EventActionView(view.actions, self._handle_action),
-                ephemeral=True,
-            )
+            action_view = EventActionView(view.actions, self._handle_action)
+            if interaction.response.is_done():
+                await interaction.followup.send(
+                    embed=discord_embed(view), view=action_view, ephemeral=True
+                )
+            else:
+                await interaction.response.send_message(
+                    embed=discord_embed(view), view=action_view, ephemeral=True
+                )
         else:
-            await interaction.response.send_message(embed=discord_embed(view), ephemeral=True)
+            if interaction.response.is_done():
+                await interaction.followup.send(embed=discord_embed(view), ephemeral=True)
+            else:
+                await interaction.response.send_message(embed=discord_embed(view), ephemeral=True)
 
     async def _handle_action(self, interaction: discord.Interaction, action_id: str) -> None:
+        await interaction.response.defer(ephemeral=True)
         result = await self._commands.resolve_action(str(interaction.user.id), action_id)
         await self._respond(interaction, result)
 
     async def start_command(self, interaction: discord.Interaction, name: str) -> None:
+        await interaction.response.defer(ephemeral=True)
         view = await self._commands.start(str(interaction.user.id), name, str(interaction.id))
         await self._respond(interaction, view)
 
     async def status_command(self, interaction: discord.Interaction) -> None:
+        await interaction.response.defer(ephemeral=True)
         view = await self._commands.status(str(interaction.user.id))
         await self._respond(interaction, view)
 
     async def mine_command(self, interaction: discord.Interaction) -> None:
+        await interaction.response.defer(ephemeral=True)
         view = await self._commands.mine(str(interaction.user.id), str(interaction.id))
         await self._respond(interaction, view)
 
     async def train_command(self, interaction: discord.Interaction) -> None:
+        await interaction.response.defer(ephemeral=True)
         view = await self._commands.train(str(interaction.user.id), str(interaction.id))
         await self._respond(interaction, view)
 
     async def events_command(self, interaction: discord.Interaction) -> None:
+        await interaction.response.defer(ephemeral=True)
         view = await self._commands.events(str(interaction.user.id))
         await self._respond(interaction, view)
