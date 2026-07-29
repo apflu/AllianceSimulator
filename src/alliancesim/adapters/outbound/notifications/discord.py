@@ -3,6 +3,7 @@ from __future__ import annotations
 import httpx
 
 from alliancesim.application.models import PendingNotification
+from alliancesim.application.notifications import NotificationDeliveryError
 from alliancesim.domain.identity import Platform
 
 DISCORD_API = "https://discord.com/api/v10"
@@ -39,24 +40,33 @@ class DiscordNotificationSender:
         if notification.platform is not Platform.DISCORD:
             raise ValueError(f"unsupported notification platform: {notification.platform}")
         headers = {"Authorization": f"Bot {self._token}"}
-        async with httpx.AsyncClient(
-            base_url=self._api_base,
-            headers=headers,
-            timeout=10,
-            transport=self._transport,
-        ) as client:
-            channel_response = await client.post(
-                "/users/@me/channels", json={"recipient_id": notification.platform_user_id}
-            )
-            channel_response.raise_for_status()
-            channel_id = str(channel_response.json()["id"])
-            message_response = await client.post(
-                f"/channels/{channel_id}/messages",
-                json={"content": notification_text(notification)},
-            )
-            message_response.raise_for_status()
+        try:
+            async with httpx.AsyncClient(
+                base_url=self._api_base,
+                headers=headers,
+                timeout=10,
+                transport=self._transport,
+            ) as client:
+                channel_response = await client.post(
+                    "/users/@me/channels", json={"recipient_id": notification.platform_user_id}
+                )
+                channel_response.raise_for_status()
+                channel_id = str(channel_response.json()["id"])
+                message_response = await client.post(
+                    f"/channels/{channel_id}/messages",
+                    json={"content": notification_text(notification)},
+                )
+                message_response.raise_for_status()
+        except httpx.HTTPStatusError as error:
+            raise NotificationDeliveryError(
+                f"Discord API returned HTTP {error.response.status_code}"
+            ) from None
+        except httpx.HTTPError as error:
+            raise NotificationDeliveryError(
+                f"Discord API request failed ({type(error).__name__})"
+            ) from None
 
 
 class UnavailableNotificationSender:
     async def send(self, notification: PendingNotification) -> None:
-        raise RuntimeError(f"no sender configured for {notification.platform}")
+        raise NotificationDeliveryError(f"no sender configured for {notification.platform.value}")

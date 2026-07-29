@@ -50,6 +50,8 @@ from .models import (
     TimedActionRow,
 )
 
+MAX_NOTIFICATION_ATTEMPTS = 10
+
 
 def _aware_utc(value: datetime) -> datetime:
     if value.tzinfo is None or value.utcoffset() is None:
@@ -626,13 +628,18 @@ class SqlAlchemyGameStore:
 
     async def mark_notification_failed(
         self, outbox_id: uuid.UUID, now: datetime, error: str
-    ) -> None:
+    ) -> bool:
         async with self._sessions() as session, session.begin():
             row = await session.get(NotificationOutboxRow, outbox_id, with_for_update=True)
             if row is None:
                 raise NotFoundError("notification not found")
-            delay_seconds = min(300, 2 ** min(row.attempts, 8))
-            row.status = "pending"
-            row.available_at = now + timedelta(seconds=delay_seconds)
+            terminal = row.attempts >= MAX_NOTIFICATION_ATTEMPTS
+            if terminal:
+                row.status = "failed"
+            else:
+                delay_seconds = min(300, 2 ** min(row.attempts, 8))
+                row.status = "pending"
+                row.available_at = now + timedelta(seconds=delay_seconds)
             row.locked_until = None
             row.last_error = error[:500]
+            return terminal

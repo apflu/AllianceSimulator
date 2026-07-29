@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import suppress
+from time import monotonic
 
 import structlog
 
@@ -36,9 +37,20 @@ class Worker:
     async def run(self) -> None:
         logger.info("worker_started", poll_interval_seconds=self._interval_seconds)
         while not self._stop.is_set():
-            processed = await self.run_once()
-            if processed:
-                logger.info("worker_poll_completed", processed=processed)
+            started = monotonic()
+            try:
+                processed = await self.run_once()
+            except asyncio.CancelledError:
+                raise
+            except Exception as error:
+                logger.error("worker_poll_failed", error_type=type(error).__name__)
+            else:
+                if processed:
+                    logger.info(
+                        "worker_poll_completed",
+                        processed=processed,
+                        duration_ms=round((monotonic() - started) * 1000, 3),
+                    )
             with suppress(TimeoutError):
                 await asyncio.wait_for(self._stop.wait(), timeout=self._interval_seconds)
         logger.info("worker_stopped")

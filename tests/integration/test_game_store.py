@@ -8,7 +8,10 @@ from pathlib import Path
 import pytest
 
 from alliancesim.adapters.outbound.persistence.database import Database
-from alliancesim.adapters.outbound.persistence.game_store import SqlAlchemyGameStore
+from alliancesim.adapters.outbound.persistence.game_store import (
+    MAX_NOTIFICATION_ATTEMPTS,
+    SqlAlchemyGameStore,
+)
 from alliancesim.adapters.outbound.persistence.models import Base
 from alliancesim.application.errors import ConflictError, NotFoundError
 from alliancesim.application.game_service import GameService
@@ -110,6 +113,27 @@ async def test_failed_notification_is_retried_after_backoff(tmp_path: Path) -> N
         assert (await store.claim_notifications(NOW + timedelta(seconds=2), limit=1)) == ()
         retried = await store.claim_notifications(NOW + timedelta(seconds=4), limit=1)
         assert len(retried) == 1
+
+
+async def test_notification_stops_after_terminal_failure(tmp_path: Path) -> None:
+    rules = MiningRules(duration=timedelta(seconds=1), base_yield=10)
+    async with game_database(tmp_path / "terminal-notification.sqlite3") as (_, store):
+        service = GameService(store, clock=lambda: NOW, mining_rules=rules)
+        await service.create_alliance(Platform.TELEGRAM, "dead-letter", "Final Union", "start")
+        await service.start_mining(Platform.TELEGRAM, "dead-letter", "mine")
+        current = NOW + timedelta(seconds=1)
+        await store.complete_due_actions(current, limit=10)
+
+        for attempt in range(1, MAX_NOTIFICATION_ATTEMPTS + 1):
+            claimed = await store.claim_notifications(current, limit=1)
+            assert len(claimed) == 1
+            terminal = await store.mark_notification_failed(
+                claimed[0].outbox_id, current, "Telegram API returned HTTP 403"
+            )
+            assert terminal is (attempt == MAX_NOTIFICATION_ATTEMPTS)
+            current += timedelta(minutes=10)
+
+        assert await store.claim_notifications(current, limit=1) == ()
 
 
 async def test_discord_and_telegram_produce_equivalent_game_state(tmp_path: Path) -> None:

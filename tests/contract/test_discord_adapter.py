@@ -174,8 +174,9 @@ class StubStore:
 
     async def mark_notification_failed(
         self, outbox_id: uuid.UUID, now: datetime, error: str
-    ) -> None:
+    ) -> bool:
         del outbox_id, now, error
+        return False
 
 
 async def test_discord_chat_commands_return_views_without_sdk_objects() -> None:

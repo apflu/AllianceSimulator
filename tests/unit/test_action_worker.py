@@ -28,6 +28,7 @@ class WorkerStore:
     def __init__(self) -> None:
         self.sent: list[uuid.UUID] = []
         self.failed: list[uuid.UUID] = []
+        self.failure_errors: list[str] = []
 
     async def complete_due_actions(self, now: datetime, *, limit: int) -> CompletionBatch:
         assert now == NOW
@@ -54,9 +55,11 @@ class WorkerStore:
 
     async def mark_notification_failed(
         self, outbox_id: uuid.UUID, now: datetime, error: str
-    ) -> None:
-        del now, error
+    ) -> bool:
+        del now
         self.failed.append(outbox_id)
+        self.failure_errors.append(error)
+        return False
 
     async def create_alliance(self, request: CreateAllianceRequest) -> AllianceCreated:
         raise AssertionError(request)
@@ -110,3 +113,4 @@ async def test_worker_retries_failed_notification() -> None:
     assert await poller.poll_once() == 2
     assert store.sent == []
     assert store.failed == [uuid.UUID(int=2)]
+    assert store.failure_errors == ["RuntimeError"]
