@@ -6,6 +6,7 @@
 2. 从 `.env.example` 创建本地 `.env`，填写测试 Bot token。
 3. Discord Bot 需要 application command 和向测试用户发送私信的权限；建议配置 `ASIM_DISCORD_GUILD_ID` 加速命令同步。
 4. Telegram Bot 应允许与测试账号私聊。
+   无法直连 Telegram API 时，在 `.env` 设置 `ASIM_TELEGRAM_PROXY_URL`（支持 HTTP 或 SOCKS）。
 5. 分别启动 `alliancesim-worker`、`alliancesim-discord` 和 `alliancesim-telegram`。
 
 token 只能放在本地环境或密钥系统中，不提交到仓库，也不粘贴到测试报告。

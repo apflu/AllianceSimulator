@@ -16,10 +16,12 @@ class TelegramNotificationSender:
         token: str,
         *,
         api_base: str = TELEGRAM_API,
+        proxy_url: str | None = None,
         transport: httpx.AsyncBaseTransport | None = None,
     ) -> None:
         self._token = token
         self._api_base = api_base.rstrip("/")
+        self._proxy_url = proxy_url
         self._transport = transport
 
     async def send(self, notification: PendingNotification) -> None:
@@ -28,6 +30,7 @@ class TelegramNotificationSender:
         try:
             async with httpx.AsyncClient(
                 base_url=self._api_base,
+                proxy=self._proxy_url,
                 timeout=10,
                 transport=self._transport,
             ) as client:

@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 
 from aiogram import Bot, Dispatcher
+from aiogram.client.session.aiohttp import AiohttpSession
 
 from alliancesim.adapters.inbound.telegram.bot import AllianceTelegramRouter
 from alliancesim.adapters.outbound.persistence.database import Database
@@ -23,7 +24,15 @@ async def run_bot() -> None:
     store = SqlAlchemyGameStore(database.sessions)
     commands = ChatCommandAdapter(GameService(store), Platform.TELEGRAM)
     adapter = AllianceTelegramRouter(commands)
-    bot = Bot(settings.telegram_token.get_secret_value())
+    proxy_url = (
+        settings.telegram_proxy_url.get_secret_value()
+        if settings.telegram_proxy_url is not None
+        else None
+    )
+    bot = Bot(
+        settings.telegram_token.get_secret_value(),
+        session=AiohttpSession(proxy=proxy_url),
+    )
     dispatcher = Dispatcher()
     dispatcher.include_router(adapter.router)
     try:

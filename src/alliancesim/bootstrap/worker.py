@@ -71,7 +71,12 @@ async def run_worker() -> None:
         )
     if settings.telegram_token is not None:
         senders[Platform.TELEGRAM] = TelegramNotificationSender(
-            settings.telegram_token.get_secret_value()
+            settings.telegram_token.get_secret_value(),
+            proxy_url=(
+                settings.telegram_proxy_url.get_secret_value()
+                if settings.telegram_proxy_url is not None
+                else None
+            ),
         )
     sender = RoutingNotificationSender(senders)
     worker = Worker(
