@@ -11,9 +11,11 @@
    ```
 
    只执行当前要测试的平台命令；需要同时运行时可同时给出两个 profile。
-3. Discord Bot 需要 application command 和向测试用户发送私信的权限；建议配置 `ASIM_DISCORD_GUILD_ID` 加速命令同步。
-   当前主动通知只发送私信，不会同时写入执行命令的服务器频道。Bot 不需要额外的服务器频道权限，
-   但测试用户必须允许接收来自该服务器成员的私信；Discord 错误码 `50007` 表示无法向该用户发送消息。
+3. Discord Guild Install 必须包含 `applications.commands` 和 `bot` scope，让 Bot 用户实际加入测试服务器；
+   Bot Permissions 可以保持为 `0`。建议配置 `ASIM_DISCORD_GUILD_ID` 加速命令同步。
+   当前主动通知只发送私信，不会同时写入执行命令的服务器频道。测试用户必须允许接收来自该服务器
+   成员的私信；Discord 错误码 `50278` 表示 Bot 与用户没有共同服务器，`50007` 表示无法向该用户
+   发送消息。
 4. Telegram Bot 应允许与测试账号私聊。
    无法直连平台 API 时，在 `.env` 设置共享的 HTTP 代理 `ASIM_PROXY_URL`；容器访问 Windows
    主机代理时使用 `host.docker.internal`，不能使用容器自身的 `127.0.0.1`。
