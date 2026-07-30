@@ -4,7 +4,7 @@ import re
 import uuid
 from datetime import UTC, datetime
 from typing import cast
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, call, patch
 
 import discord
 import structlog
@@ -104,13 +104,15 @@ def test_discord_client_configures_gateway_proxy() -> None:
 async def test_discord_client_reports_command_sync_and_gateway_readiness() -> None:
     commands = cast(ChatCommandAdapter, UnusedCommands())
     client = AllianceDiscordClient(commands, guild_id=123)
-    sync = AsyncMock(return_value=[object()] * 5)
+    sync = AsyncMock(side_effect=[[], [object()] * 5])
 
     with patch.object(client.tree, "sync", sync), capture_logs() as logs:
         await client.setup_hook()
         await client.on_ready()
 
-    assert sync.await_count == 1
+    assert sync.await_count == 2
+    assert sync.await_args_list[0] == call()
+    assert sync.await_args_list[1].kwargs["guild"].id == 123
     assert logs == [
         {
             "command_count": 5,

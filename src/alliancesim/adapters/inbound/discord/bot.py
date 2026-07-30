@@ -120,6 +120,11 @@ class AllianceDiscordClient(discord.Client):
         )
 
     async def setup_hook(self) -> None:
+        if self._guild is not None:
+            # Guild commands and global commands are separate remote collections.
+            # Sync the intentionally empty global tree first so switching a test
+            # deployment to guild scope does not leave duplicate global commands.
+            await self.tree.sync()
         synced_commands = await self.tree.sync(guild=self._guild)
         logger.info(
             "discord_commands_synced",
