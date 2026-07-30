@@ -9,6 +9,21 @@ from alliancesim.domain.identity import Platform
 DISCORD_API = "https://discord.com/api/v10"
 
 
+def _raise_for_discord_status(response: httpx.Response, operation: str) -> None:
+    try:
+        response.raise_for_status()
+    except httpx.HTTPStatusError:
+        try:
+            body = response.json()
+        except ValueError:
+            body = None
+        error_code = body.get("code") if isinstance(body, dict) else None
+        code_detail = f" (code {error_code})" if isinstance(error_code, int) else ""
+        raise NotificationDeliveryError(
+            f"Discord API {operation} returned HTTP {response.status_code}{code_detail}"
+        ) from None
+
+
 def notification_text(notification: PendingNotification) -> str:
     if notification.event_type == "mining_completed":
         material = str(notification.payload["material_id"])
@@ -53,17 +68,15 @@ class DiscordNotificationSender:
                 channel_response = await client.post(
                     "/users/@me/channels", json={"recipient_id": notification.platform_user_id}
                 )
-                channel_response.raise_for_status()
+                _raise_for_discord_status(channel_response, "create DM")
                 channel_id = str(channel_response.json()["id"])
                 message_response = await client.post(
                     f"/channels/{channel_id}/messages",
                     json={"content": notification_text(notification)},
                 )
-                message_response.raise_for_status()
-        except httpx.HTTPStatusError as error:
-            raise NotificationDeliveryError(
-                f"Discord API returned HTTP {error.response.status_code}"
-            ) from None
+                _raise_for_discord_status(message_response, "send DM")
+        except NotificationDeliveryError:
+            raise
         except httpx.HTTPError as error:
             raise NotificationDeliveryError(
                 f"Discord API request failed ({type(error).__name__})"
