@@ -23,7 +23,8 @@ MVP 功能实现、自动化验证以及真实 Discord/Telegram Bot 冒烟均已
 - [领域模型](docs/architecture/domain-model.md)
 - [里程碑路线图](docs/milestones/README.md)
 
-下一项工作是细化 M4 的探索、舰船差异与数据驱动内容扩展；MVP 的自动化与双平台实测证据见
+下一项工作是按 [Alpha 路线图](docs/milestones/alpha/README.md) 深入策划 EVE 内容、联盟成员、技能
+计划、舰队、工业、市场与物流；MVP 的自动化与双平台实测证据见
 [MVP 验证报告](docs/milestones/verification.md)。
 
 ## Docker 启动

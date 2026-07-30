@@ -4,6 +4,11 @@
 
 材料、地点、舰船类型、技能和事件模板使用稳定的字符串 ID。ID 一旦进入迁移或玩家存档便不能重新分配给其他含义；显示名称可以独立调整。
 
+Alpha 开始区分来源命名空间：SDE 派生内容使用 `eve:`，原创联盟内容使用 `asim:`，例如
+`eve:type:587` 与 `asim:knowledge:fitting-theory`。SDE 数字 ID 不能被原创内容复用。每个 SDE 内容
+快照同时记录 build number、artifact 摘要、导入器版本和 projection schema version；详细流程见
+[SDE 内容接入规划](../EVE/sde-integration.md)。
+
 ## 规则版本
 
 长期行动开始时冻结影响结算的结果和规则版本。例如，采矿行动保存预计产量，技能训练保存目标等级，因此部署新平衡数值不会改变已经开始的行动。

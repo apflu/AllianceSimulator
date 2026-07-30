@@ -7,6 +7,8 @@
 - [产品愿景](product/vision.md)：我们在做什么，以及刻意不做什么。
 - [MVP 范围](product/mvp-scope.md)：首个可玩版本包含和不包含的内容。
 - [平台身份与账号策略](product/account-linking.md)：Discord、Telegram 身份隔离与未来绑定方案。
+- [Alpha 系统模块地图](product/system-map.md)：成员、技能、舰队、工业、经济、物流与事件的边界。
+- [游戏策划权限与决策登记](product/game-design-authority.md)：SDE、工程与用户策划的所有权边界。
 
 ## 架构
 
@@ -25,6 +27,7 @@
 - [M2：Telegram 功能对等](milestones/M2-telegram-parity.md)
 - [M3：事件与长期成长](milestones/M3-events-and-progression.md)
 - [MVP 验证报告](milestones/verification.md)
+- [Alpha 路线图](milestones/alpha/README.md)：α0–α6 的纵向切片、依赖和策划门槛。
 
 ## 开发
 
@@ -35,6 +38,7 @@
 ## 参考
 
 - [旧项目检查结论](reference/legacy-system-findings.md)
+- [EVE SDE 内容接入规划](EVE/sde-integration.md)
 
 ## 文档维护规则
 
