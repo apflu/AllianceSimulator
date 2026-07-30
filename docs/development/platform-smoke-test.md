@@ -46,4 +46,5 @@ token 只能放在本地环境或密钥系统中，不提交到仓库，也不�
 完成后在 [MVP 验证报告](../milestones/verification.md) 中填写日期、测试平台和结果，不记录 token、用户 ID、服务器 ID 或聊天 ID。若平台测试失败，应记录可复现的命令、响应类别和日志关联 ID。
 
 - 2026-07-30：Telegram 全流程通过；玩家可见结果与 PostgreSQL 终态一致。
-- Discord：待 Developer Portal 可用并配置测试 Bot 后执行。
+- 2026-07-30：Discord 真实 token 认证、5 条 global command 同步和 Gateway ready 通过；测试服务器
+  玩家流程待执行。

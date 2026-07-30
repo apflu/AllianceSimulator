@@ -65,6 +65,18 @@
 数据库终态确认三项行动均为 `completed`、没有活动行动，三条 outbox 通知均在首次尝试后为
 `sent`。测试未记录 token、Telegram 用户 ID 或聊天 ID。
 
+### 真实 Discord Bot 连接预检（2026-07-30）
+
+使用 Docker、真实 Bot token 和共享 HTTP 代理完成启动预检：
+
+1. Discord REST 身份认证成功；
+2. 5 条 MVP application command 以 global scope 同步成功；
+3. Gateway 连接成功并进入 ready，容器保持运行；
+4. 启动日志包含 `discord_commands_synced` 和 `discord_bot_ready`。
+
+本次只证明真实认证、命令注册和 Gateway 连接，尚未替代测试服务器中的玩家旅程。测试未记录
+token、Bot ID、服务器 ID、用户 ID 或 Gateway session ID。
+
 ### 关键不变量
 
 - 重复创建联盟和重复开始行动不会创建第二份状态；
@@ -123,5 +135,6 @@ Telegram 的真实 token、代理、轮询、私聊、inline keyboard 和主动�
 
 执行步骤见[平台冒烟测试](../development/platform-smoke-test.md)。完成并记录结果后，才能把 MVP 状态改为“全部验收完成”。
 
-当前 `ASIM_DISCORD_TOKEN` 与 `ASIM_DISCORD_GUILD_ID` 未配置，且 Discord Developer Portal
-暂时不可用；此结论只记录配置是否存在，不读取或记录任何 token 值。
+当前 `ASIM_DISCORD_TOKEN` 已在本地配置并通过真实连接预检，`ASIM_DISCORD_GUILD_ID` 仍未配置；
+因此命令使用 global scope，可能需要等待平台传播。此结论只记录配置是否存在，不读取或记录任何
+token 值。
