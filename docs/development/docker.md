@@ -61,9 +61,10 @@ docker compose --profile discord up -d --build --wait
 docker compose --profile telegram --profile discord up -d --build --wait
 ```
 
-若当前网络需要代理，容器不能用 `127.0.0.1` 访问 Windows 主机上的代理。将
-`ASIM_TELEGRAM_PROXY_URL` 设置为 Docker 容器可访问的地址，例如代理允许局域网连接时可使用
-`http://host.docker.internal:7897`。
+若当前网络需要代理，容器不能用 `127.0.0.1` 访问 Windows 主机上的代理。将共享的
+`ASIM_PROXY_URL` 设置为 Docker 容器可访问的 HTTP 地址，例如
+`http://host.docker.internal:7897`。Discord Gateway、Telegram 轮询以及两个平台的主动通知都会
+使用该地址。
 
 ## 停止与存档
 

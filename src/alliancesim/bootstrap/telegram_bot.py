@@ -24,11 +24,7 @@ async def run_bot() -> None:
     store = SqlAlchemyGameStore(database.sessions)
     commands = ChatCommandAdapter(GameService(store), Platform.TELEGRAM)
     adapter = AllianceTelegramRouter(commands)
-    proxy_url = (
-        settings.telegram_proxy_url.get_secret_value()
-        if settings.telegram_proxy_url is not None
-        else None
-    )
+    proxy_url = settings.proxy_url.get_secret_value() if settings.proxy_url is not None else None
     bot = Bot(
         settings.telegram_token.get_secret_value(),
         session=AiohttpSession(proxy=proxy_url),

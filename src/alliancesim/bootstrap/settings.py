@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     discord_token: SecretStr | None = None
     discord_guild_id: int | None = None
     telegram_token: SecretStr | None = None
-    telegram_proxy_url: SecretStr | None = None
+    proxy_url: SecretStr | None = None
 
 
 @lru_cache

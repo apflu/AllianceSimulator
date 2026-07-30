@@ -65,18 +65,15 @@ async def run_worker() -> None:
     database = Database(settings.database_url)
     store = SqlAlchemyGameStore(database.sessions)
     senders: dict[Platform, NotificationSender] = {}
+    proxy_url = settings.proxy_url.get_secret_value() if settings.proxy_url is not None else None
     if settings.discord_token is not None:
         senders[Platform.DISCORD] = DiscordNotificationSender(
-            settings.discord_token.get_secret_value()
+            settings.discord_token.get_secret_value(), proxy_url=proxy_url
         )
     if settings.telegram_token is not None:
         senders[Platform.TELEGRAM] = TelegramNotificationSender(
             settings.telegram_token.get_secret_value(),
-            proxy_url=(
-                settings.telegram_proxy_url.get_secret_value()
-                if settings.telegram_proxy_url is not None
-                else None
-            ),
+            proxy_url=proxy_url,
         )
     sender = RoutingNotificationSender(senders)
     worker = Worker(

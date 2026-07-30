@@ -62,7 +62,8 @@ docker compose --profile quality run --rm quality
 
 Discord Bot 需要 `ASIM_DISCORD_TOKEN`；开发时可以设置 `ASIM_DISCORD_GUILD_ID`，以便命令立即同步到测试服务器。
 Telegram Bot 需要 `ASIM_TELEGRAM_TOKEN`。
-无法直连 Telegram API 时，可以设置 `ASIM_TELEGRAM_PROXY_URL`；容器中的轮询与主动通知会共用该代理。
+无法直连平台 API 时，可以设置 `ASIM_PROXY_URL`；Discord、Telegram 的入口与主动通知会共用该
+HTTP 代理。
 
 两个聊天平台提供相同的玩家命令：
 

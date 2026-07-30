@@ -91,6 +91,16 @@ def test_discord_client_registers_mvp_slash_commands() -> None:
     assert names == {"start", "status", "mine", "train", "events"}
 
 
+def test_discord_client_configures_gateway_proxy() -> None:
+    commands = cast(ChatCommandAdapter, UnusedCommands())
+    client = AllianceDiscordClient(
+        commands,
+        guild_id=123,
+        proxy_url="http://host.docker.internal:7897",
+    )
+    assert client.http.proxy == "http://host.docker.internal:7897"
+
+
 async def test_discord_client_reports_command_sync_and_gateway_readiness() -> None:
     commands = cast(ChatCommandAdapter, UnusedCommands())
     client = AllianceDiscordClient(commands, guild_id=123)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import uuid
+from unittest.mock import AsyncMock, patch
 
 import httpx
 import pytest
@@ -52,3 +53,30 @@ async def test_telegram_notification_failure_does_not_expose_token() -> None:
     with pytest.raises(NotificationDeliveryError, match="HTTP 401") as caught:
         await sender.send(notification)
     assert "super-secret-token" not in str(caught.value)
+
+
+async def test_telegram_notification_uses_configured_proxy() -> None:
+    client = AsyncMock()
+    client.__aenter__.return_value = client
+    client.post.return_value = httpx.Response(
+        200,
+        json={"ok": True},
+        request=httpx.Request("POST", "https://api.telegram.org/botsecret/sendMessage"),
+    )
+    notification = PendingNotification(
+        outbox_id=uuid.UUID(int=1),
+        platform=Platform.TELEGRAM,
+        platform_user_id="42",
+        event_type="mining_completed",
+        payload={"material_id": "raw-ore", "quantity": 100},
+    )
+
+    with patch(
+        "alliancesim.adapters.outbound.notifications.telegram.httpx.AsyncClient",
+        return_value=client,
+    ) as async_client:
+        await TelegramNotificationSender(
+            "secret", proxy_url="http://host.docker.internal:7897"
+        ).send(notification)
+
+    assert async_client.call_args.kwargs["proxy"] == "http://host.docker.internal:7897"

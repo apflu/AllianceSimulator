@@ -13,8 +13,8 @@
    只执行当前要测试的平台命令；需要同时运行时可同时给出两个 profile。
 3. Discord Bot 需要 application command 和向测试用户发送私信的权限；建议配置 `ASIM_DISCORD_GUILD_ID` 加速命令同步。
 4. Telegram Bot 应允许与测试账号私聊。
-   无法直连 Telegram API 时，在 `.env` 设置 `ASIM_TELEGRAM_PROXY_URL`（支持 HTTP 或 SOCKS）；
-   容器访问 Windows 主机代理时使用 `host.docker.internal`，不能使用容器自身的 `127.0.0.1`。
+   无法直连平台 API 时，在 `.env` 设置共享的 HTTP 代理 `ASIM_PROXY_URL`；容器访问 Windows
+   主机代理时使用 `host.docker.internal`，不能使用容器自身的 `127.0.0.1`。
 5. Discord 玩家测试开始前执行 `docker compose logs discord`，确认日志依次出现
    `discord_commands_synced` 和 `discord_bot_ready`；前者应显示 5 条命令。全局命令同步可能需要
    较长时间，测试服务器优先配置 `ASIM_DISCORD_GUILD_ID` 使用 guild scope。

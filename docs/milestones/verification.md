@@ -11,8 +11,8 @@
 - `ruff format --check`：通过；
 - `ruff check`：通过；
 - `pyright` 严格模式：0 错误、0 警告；
-- 独立临时 PostgreSQL 中：49 项测试全部通过，包含 3 项 PostgreSQL 专属测试；
-- 无 PostgreSQL 时仍可运行核心套件：46 项通过，3 项数据库专属测试按条件跳过；
+- 独立临时 PostgreSQL 中：52 项测试全部通过，包含 3 项 PostgreSQL 专属测试；
+- 无 PostgreSQL 时仍可运行核心套件：49 项通过，3 项数据库专属测试按条件跳过；
 - 质量数据库使用临时文件系统，不连接或修改玩家存档；
 - CI 除上述门槛外还校验 Compose 配置并构建运行镜像。
 
@@ -102,7 +102,7 @@
 | Discord 入口 | 五个 slash command、component、handler 与渲染契约测试 | 自动验证通过；真实平台待验收 |
 | Telegram 对等入口 | 五个 command、inline keyboard、callback、通知、对等状态测试及真实 Bot 完整旅程 | 通过 |
 | 联盟事件及明确结果 | 唯一触发、内容快照、幂等选项、24 小时默认结果测试 | 通过 |
-| 单元、集成和适配器契约测试 | Docker 中 49 项测试全部通过，包含 3 项 PostgreSQL 专属测试 | 通过 |
+| 单元、集成和适配器契约测试 | Docker 中 52 项测试全部通过，包含 3 项 PostgreSQL 专属测试 | 通过 |
 
 ### MVP 指标审计
 

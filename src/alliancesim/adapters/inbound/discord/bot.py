@@ -69,9 +69,10 @@ class AllianceDiscordClient(discord.Client):
         commands: ChatCommandAdapter,
         *,
         guild_id: int | None = None,
+        proxy_url: str | None = None,
         on_close: Callable[[], Awaitable[None]] | None = None,
     ) -> None:
-        super().__init__(intents=discord.Intents.none())
+        super().__init__(intents=discord.Intents.none(), proxy=proxy_url)
         self.tree = app_commands.CommandTree(self)
         self._commands = commands
         self._guild = discord.Object(id=guild_id) if guild_id is not None else None

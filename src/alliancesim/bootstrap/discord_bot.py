@@ -18,9 +18,11 @@ def main() -> None:
     database = Database(settings.database_url)
     store = SqlAlchemyGameStore(database.sessions)
     commands = ChatCommandAdapter(GameService(store), Platform.DISCORD)
+    proxy_url = settings.proxy_url.get_secret_value() if settings.proxy_url is not None else None
     client = AllianceDiscordClient(
         commands,
         guild_id=settings.discord_guild_id,
+        proxy_url=proxy_url,
         on_close=database.close,
     )
     client.run(settings.discord_token.get_secret_value(), log_handler=None)
