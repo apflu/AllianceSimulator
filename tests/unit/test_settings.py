@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+from pydantic import ValidationError
 from pytest import MonkeyPatch
 
 from alliancesim.bootstrap.settings import Settings
@@ -9,12 +11,12 @@ def test_settings_read_prefixed_environment(monkeypatch: MonkeyPatch, tmp_path: 
     monkeypatch.chdir(tmp_path)
     monkeypatch.setenv("ASIM_PORT", "9001")
     monkeypatch.setenv("ASIM_ENVIRONMENT", "test")
-    monkeypatch.setenv("ASIM_PROXY_URL", "http://127.0.0.1:7897")
+    monkeypatch.setenv("ASIM_PROXY_URL", "host.docker.internal:7897")
     settings = Settings()
     assert settings.port == 9001
     assert settings.environment == "test"
     assert settings.proxy_url is not None
-    assert settings.proxy_url.get_secret_value() == "http://127.0.0.1:7897"
+    assert settings.proxy_url.get_secret_value() == "http://host.docker.internal:7897"
 
 
 def test_blank_optional_tokens_are_ignored(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
@@ -26,3 +28,10 @@ def test_blank_optional_tokens_are_ignored(monkeypatch: MonkeyPatch, tmp_path: P
     assert settings.discord_token is None
     assert settings.telegram_token is None
     assert settings.proxy_url is None
+
+
+def test_shared_proxy_rejects_non_http_scheme(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("ASIM_PROXY_URL", "socks5://host.docker.internal:7897")
+    with pytest.raises(ValidationError, match="proxy URL must use HTTP"):
+        Settings()

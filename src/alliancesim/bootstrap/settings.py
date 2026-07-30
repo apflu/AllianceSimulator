@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from functools import lru_cache
 from typing import Literal
+from urllib.parse import urlsplit
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -26,6 +27,30 @@ class Settings(BaseSettings):
     discord_guild_id: int | None = None
     telegram_token: SecretStr | None = None
     proxy_url: SecretStr | None = None
+
+    @field_validator("proxy_url", mode="before")
+    @classmethod
+    def normalize_proxy_url(cls, value: object) -> object:
+        if not isinstance(value, str):
+            return value
+        normalized = value.strip()
+        if normalized and "://" not in normalized:
+            return f"http://{normalized}"
+        return normalized
+
+    @field_validator("proxy_url")
+    @classmethod
+    def validate_proxy_url(cls, value: SecretStr | None) -> SecretStr | None:
+        if value is None:
+            return None
+        parsed = urlsplit(value.get_secret_value())
+        if parsed.scheme not in {"http", "https"} or parsed.hostname is None:
+            raise ValueError("proxy URL must use HTTP and include a hostname")
+        try:
+            _ = parsed.port
+        except ValueError as error:
+            raise ValueError("proxy URL contains an invalid port") from error
+        return value
 
 
 @lru_cache
