@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import cast
+
 import httpx
 
 from alliancesim.application.models import PendingNotification
@@ -14,10 +16,11 @@ def _raise_for_discord_status(response: httpx.Response, operation: str) -> None:
         response.raise_for_status()
     except httpx.HTTPStatusError:
         try:
-            body = response.json()
+            decoded_body: object = response.json()
         except ValueError:
-            body = None
-        error_code = body.get("code") if isinstance(body, dict) else None
+            decoded_body = None
+        body = cast(dict[str, object], decoded_body) if isinstance(decoded_body, dict) else {}
+        error_code = body.get("code")
         code_detail = f" (code {error_code})" if isinstance(error_code, int) else ""
         raise NotificationDeliveryError(
             f"Discord API {operation} returned HTTP {response.status_code}{code_detail}"
