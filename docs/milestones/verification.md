@@ -2,7 +2,7 @@
 
 - 验证日期：2026-07-30
 - 分支：`python-rewrite`
-- 状态：实现与自动化验证完成；真实 Telegram 冒烟通过，Discord 冒烟待执行
+- 状态：MVP 全部验收完成；自动化与真实 Discord/Telegram 冒烟均通过
 
 ## 已取得的证据
 
@@ -11,8 +11,8 @@
 - `ruff format --check`：通过；
 - `ruff check`：通过；
 - `pyright` 严格模式：0 错误、0 警告；
-- 独立临时 PostgreSQL 中：53 项测试全部通过，包含 3 项 PostgreSQL 专属测试；
-- 无 PostgreSQL 时仍可运行核心套件：50 项通过，3 项数据库专属测试按条件跳过；
+- 独立临时 PostgreSQL 中：55 项测试全部通过，包含 3 项 PostgreSQL 专属测试；
+- 无 PostgreSQL 时仍可运行核心套件：52 项通过，3 项数据库专属测试按条件跳过；
 - 质量数据库使用临时文件系统，不连接或修改玩家存档；
 - CI 除上述门槛外还校验 Compose 配置并构建运行镜像。
 
@@ -65,17 +65,25 @@
 数据库终态确认三项行动均为 `completed`、没有活动行动，三条 outbox 通知均在首次尝试后为
 `sent`。测试未记录 token、Telegram 用户 ID 或聊天 ID。
 
-### 真实 Discord Bot 连接预检（2026-07-30）
+### 真实 Discord Bot 完整旅程（2026-07-30）
 
-使用 Docker、真实 Bot token 和共享 HTTP 代理完成启动预检：
+使用 Docker PostgreSQL 17、真实 Discord Bot、测试服务器和共享 HTTP 代理完成完整流程：
 
 1. Discord REST 身份认证成功；
-2. 5 条 MVP application command 以 global scope 同步成功；
-3. Gateway 连接成功并进入 ready，容器保持运行；
-4. 启动日志包含 `discord_commands_synced` 和 `discord_bot_ready`。
+2. 5 条 MVP application command 以 guild scope 同步，Gateway 进入 ready；切换 scope 时会清理
+   同一应用遗留的 global command，避免重复命令；
+3. `/start`、`/status` 和 `/mine` 完成基础流程，基础采矿预计并结算 100；
+4. Bot 以 `bot` scope 加入测试服务器后，采矿和训练完成私信均成功送达；Bot Permissions 保持为 0；
+5. `/events` 展示事件按钮，重启 Bot 后点击重启前生成的旧按钮仍可获得 1 `research-data`；
+6. 再次点击同一按钮返回已处理结果，数据库仍只有一个事件实例和 1 `research-data`；
+7. `/train` 完成后状态显示 `mining-operations: 1`，后续 `/mine` 预计并结算 110。
 
-本次只证明真实认证、命令注册和 Gateway 连接，尚未替代测试服务器中的玩家旅程。测试未记录
-token、Bot ID、服务器 ID、用户 ID 或 Gateway session ID。
+首次 Guild Install 只包含 application command，Bot 未成为服务器成员，Discord 因没有共同服务器而
+以 `50278` 拒绝私信。补充 `bot` scope 后，玩家手工开始了一次新的基础采矿来重试旅程，因此测试
+存档包含两次独立的 100 采矿和一次训练后的 110 采矿，最终为 310 `raw-ore` 和 1
+`research-data`。四项行动均为 `completed`，没有活动行动；修正安装后的两条采矿通知和一条训练
+通知均为 `sent`，首次失败记录保留为可审计的 `failed` 终态。测试未记录 token、Bot ID、服务器
+ID、用户 ID 或 Gateway session ID。
 
 ### 关键不变量
 
@@ -111,10 +119,10 @@ token、Bot ID、服务器 ID、用户 ID 或 Gateway session ID。
 | 采矿开始、到期结算和查询 | 领域规划、持久化行动、Worker 结算及端到端旅程 | 通过 |
 | 重启后结算逾期行动 | 关闭并重建数据库适配器后的结算与状态测试 | 通过 |
 | 事务性通知发件箱和安全重试 | 行动与 outbox 同事务；租约认领、退避、终止状态及发送器测试 | 通过 |
-| Discord 入口 | 五个 slash command、component、handler 与渲染契约测试 | 自动验证通过；真实平台待验收 |
+| Discord 入口 | 五个 slash command、component、handler、渲染契约测试及真实完整旅程 | 通过 |
 | Telegram 对等入口 | 五个 command、inline keyboard、callback、通知、对等状态测试及真实 Bot 完整旅程 | 通过 |
 | 联盟事件及明确结果 | 唯一触发、内容快照、幂等选项、24 小时默认结果测试 | 通过 |
-| 单元、集成和适配器契约测试 | Docker 中 53 项测试全部通过，包含 3 项 PostgreSQL 专属测试 | 通过 |
+| 单元、集成和适配器契约测试 | Docker 中 55 项测试全部通过，包含 3 项 PostgreSQL 专属测试 | 通过 |
 
 ### MVP 指标审计
 
@@ -122,19 +130,12 @@ token、Bot ID、服务器 ID、用户 ID 或 Gateway session ID。
 |---|---|---|
 | 重复平台交互不重复发放资源 | 行动唯一幂等键、事件解析幂等测试 | 通过 |
 | 停服重启后最终且仅结算一次 | 重启集成测试与真实 PostgreSQL 双 Worker 测试 | 通过 |
-| 两个平台产生等价领域结果 | 平台对等集成测试、共用 `GameService`/`ChatCommandAdapter` 与真实 Telegram 旅程 | 自动验证与 Telegram 实测通过；Discord 待验收 |
+| 两个平台产生等价领域结果 | 平台对等集成测试、共用 `GameService`/`ChatCommandAdapter` 与双平台真实旅程 | 通过 |
 | 核心测试无需平台 API | 全量本地测试使用 fake/mock sender 和平台对象 | 通过 |
 | 首次采矿无需修改数据库 | `test_player_completes_mvp_journey_without_database_edits` | 通过 |
 
-## 尚缺的外部验证
+## 外部验证结论
 
-Telegram 的真实 token、代理、轮询、私聊、inline keyboard 和主动通知已经验证。以下 Discord
-项目仍需在测试环境执行：
-
-- Discord 测试服务器完成 `/start → /status → /mine → /events → /train`；
-
-执行步骤见[平台冒烟测试](../development/platform-smoke-test.md)。完成并记录结果后，才能把 MVP 状态改为“全部验收完成”。
-
-当前 `ASIM_DISCORD_TOKEN` 已在本地配置并通过真实连接预检，`ASIM_DISCORD_GUILD_ID` 仍未配置；
-因此命令使用 global scope，可能需要等待平台传播。此结论只记录配置是否存在，不读取或记录任何
-token 值。
+Telegram 的真实 token、代理、轮询、私聊、inline keyboard 和主动通知，以及 Discord 的真实 token、
+代理、guild command、Gateway、私信和重启后动态按钮均已验证。MVP 没有剩余的外部验收项；下一阶段
+可以进入 M4 的范围细化，不需要继续扩展当前冒烟存档。

@@ -1,6 +1,6 @@
 # M3：事件与长期成长
 
-状态：实现与自动验证完成；真实 Telegram 流程和 Discord 连接预检已通过，待 Discord 玩家流程
+状态：完成；自动验证与 Discord/Telegram 真实玩家流程均通过
 
 ## 玩家结果
 
